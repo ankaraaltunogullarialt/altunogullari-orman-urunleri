@@ -8,7 +8,7 @@ django-jazzmin==2.6.0
 djangorestframework==3.14.0
 et_xmlfile==2.0.0
 MarkupPy==1.18
-numpy==2.5.2
+numpy==2.4.6
 odfpy==1.4.1
 openpyxl==3.1.5
 pandas==3.0.5
