@@ -34,11 +34,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 WSGI_APPLICATION = 'fabrika.wsgi.application'
 
 # ========== LOGGING ==========
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True, parents=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {'level': 'ERROR', 'class': 'logging.FileHandler', 'filename': BASE_DIR / 'logs' / 'django.log'},
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'django.log',
+        },
         'console': {'level': 'INFO', 'class': 'logging.StreamHandler'},
     },
     'loggers': {
