@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Finans Raporu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-money-bill-wave text-warning"></i> Finans Raporu</h1>
+        <p class="lead">Cari hesap ve banka durumu</p>
+        <hr>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-arrow-down"></i> Toplam Alacak</h5>
+                <h2>{{ toplam_alacak|floatformat:2|default:"0.00" }} TL</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-arrow-up"></i> Toplam Borç</h5>
+                <h2>{{ toplam_borc|floatformat:2|default:"0.00" }} TL</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-calculator"></i> Net Bakiye</h5>
+                <h2>{{ net_bakiye|floatformat:2|default:"0.00" }} TL</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Banka Hesapları -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-university"></i> Banka Hesapları
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Banka</th>
+                        <th>Hesap No</th>
+                        <th>Bakiye</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for banka in bankalar %}
+                    <tr>
+                        <td>{{ banka.ad }}</td>
+                        <td>{{ banka.hesap_no }}</td>
+                        <td><strong>{{ banka.bakiye|floatformat:2 }} {{ banka.para_birimi }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            <i class="fas fa-info-circle"></i> Banka hesabı bulunamadı
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle"></i> <strong>Toplam Banka Bakiyesi:</strong> {{ toplam_banka|floatformat:2|default:"0.00" }} TL
+        </div>
+        <a href="/admin/finans/" class="btn btn-warning">
+            <i class="fas fa-arrow-right"></i> Finans Yönetimine Git
+        </a>
+    </div>
+</div>
+{% endblock %}

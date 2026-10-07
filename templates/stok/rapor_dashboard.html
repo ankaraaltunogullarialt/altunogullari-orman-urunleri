@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Raporlama Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-chart-pie text-success"></i> Raporlama Dashboard</h1>
+        <p class="lead">İşletmenizin tüm önemli verilerine tek yerden ulaşın.</p>
+        <hr>
+    </div>
+</div>
+
+<!-- Rapor Linkleri -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-boxes fa-3x text-primary"></i>
+                <h5 class="mt-2">Stok Raporu</h5>
+                <p>Mevcut stok, kritik stok, hareket analizi</p>
+                <a href="{% url 'stok:stok_raporu' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-industry fa-3x text-success"></i>
+                <h5 class="mt-2">Üretim Raporu</h5>
+                <p>Aylık üretim, fire oranları, verimlilik</p>
+                <a href="{% url 'stok:uretim_raporu' %}" class="btn btn-success">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave fa-3x text-warning"></i>
+                <h5 class="mt-2">Finans Raporu</h5>
+                <p>Cari hesaplar, banka durumu, nakit akışı</p>
+                <a href="{% url 'stok:finans_raporu' %}" class="btn btn-warning">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== YENİ SATIR: STOK HAREKETLERİ + PERSONEL ===== -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-info">
+            <div class="card-body text-center">
+                <i class="fas fa-exchange-alt fa-3x text-info"></i>
+                <h5 class="mt-2">Stok Hareketleri</h5>
+                <p>Tarih aralığına göre stok hareketlerini görüntüle ve Excel'e aktar</p>
+                <a href="{% url 'stok:stok_hareket_raporu' %}" class="btn btn-info">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary"></i>
+                <h5 class="mt-2">Personel Raporu</h5>
+                <p>Personel istatistikleri, departman dağılımı, izin durumu</p>
+                <a href="/personel/rapor/" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-success">
+            <div class="card-body text-center">
+                <i class="fas fa-file-contract fa-3x text-success"></i>
+                <h5 class="mt-2">İhale Raporu</h5>
+                <p>İhale istatistikleri ve icmal</p>
+                <a href="{% url 'stok:ihale_raporu' %}" class="btn btn-success">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== YENİ SATIR: FİİLİ STOK TAKİP + TAŞIYICI + BOY ANALİZ ===== -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-danger shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-list fa-3x text-danger"></i>
+                <h5 class="mt-2">Fiili Stok Takip Raporu</h5>
+                <p>Aylık devir, sevk toplamları ve fiili stok durumu</p>
+                <a href="{% url 'stok:fiili_stok_takip_raporu' %}" class="btn btn-danger">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-secondary">
+            <div class="card-body text-center">
+                <i class="fas fa-truck fa-3x text-secondary"></i>
+                <h5 class="mt-2">Taşıyıcı Raporu</h5>
+                <p>Taşıyıcı nakliye ve ödeme raporları</p>
+                <a href="{% url 'stok:tasiyici_raporu' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-ruler fa-3x text-warning"></i>
+                <h5 class="mt-2">Boy Analiz Raporu</h5>
+                <p>Tomruk boylarına göre analiz raporu</p>
+                <a href="{% url 'stok:ihale_boy_analiz_raporu' %}" class="btn btn-warning">
+                    <i class="fas fa-arrow-right"></i> İncele
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hızlı Erişim -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-bolt"></i> Hızlı Erişim
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-2">
+                <a href="/admin/stok/urun/" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-cube"></i> Ürünler
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/admin/stok/stokhareket/" class="btn btn-outline-success w-100 mb-2">
+                    <i class="fas fa-exchange-alt"></i> Stok Hareketleri
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/admin/stok/stokdevir/" class="btn btn-outline-info w-100 mb-2">
+                    <i class="fas fa-calendar-alt"></i> Stok Devirleri
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/admin/stok/ihale/" class="btn btn-outline-warning w-100 mb-2">
+                    <i class="fas fa-gavel"></i> İhaleler
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/admin/finans/carihesap/" class="btn btn-outline-danger w-100 mb-2">
+                    <i class="fas fa-users-cog"></i> Cari Hesaplar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+cd C:\Users\SizinKullaniciAdiniz\Desktop\OrmanFabrikam
+venv\Scripts\activate
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver

@@ -1,0 +1,161 @@
+{% load i18n %}
+
+{% with pname=spec.parameter_name %}
+
+<style>
+  /* ===== "Tarih süzgecine göre" başlığını GİZLE ===== */
+  details[data-filter-title] > summary {
+    display: none !important;
+  }
+
+  details[data-filter-title] {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ===== FİLTRE WRAPPER — TAM GENİŞLİK ===== */
+  .trf-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 0;
+  }
+
+  /* ===== HIZLI BUTONLAR — 8 SÜTUN ===== */
+  .trf-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+  }
+
+  .trf-btn {
+    text-align: center;
+    padding: 22px 6px;
+    font-size: 22px;
+    font-weight: 700;
+    border-radius: 6px;
+    text-decoration: none;
+    background: #f1f3f5;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+    transition: all 0.15s;
+    line-height: 1.2;
+  }
+  .trf-btn:hover {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+  }
+
+  /* ===== TARİH SATIRI ===== */
+  .trf-form-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: flex-end;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+  }
+
+  .trf-date-item {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .trf-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  .trf-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  .trf-submit {
+    flex: 0 0 auto;
+    padding: 10px 24px;
+    background: #198754;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    height: 38px;
+    transition: background 0.15s;
+  }
+  .trf-submit:hover {
+    background: #157347;
+  }
+</style>
+
+<details data-filter-title="{{ title }}" open>
+  <summary style="display:none;"></summary>
+
+  <div class="trf-wrapper">
+
+    <!-- ===== HIZLI BUTONLAR ===== -->
+    <div class="trf-btn-grid">
+      <a href="?{{ pname }}=bugun"    class="trf-btn">Bugün</a>
+      <a href="?{{ pname }}=son7gun"  class="trf-btn">7 Gün</a>
+      <a href="?{{ pname }}=son15gun" class="trf-btn">15 Gün</a>
+      <a href="?{{ pname }}=son30gun" class="trf-btn">30 Gün</a>
+      <a href="?{{ pname }}=son1ay"   class="trf-btn">1 Ay</a>
+      <a href="?{{ pname }}=son3ay"   class="trf-btn">3 Ay</a>
+      <a href="?{{ pname }}=son6ay"   class="trf-btn">6 Ay</a>
+      <a href="?{{ pname }}=son1yil"  class="trf-btn">1 Yıl</a>
+    </div>
+
+    <!-- ===== TARİH + UYGULA ===== -->
+    <form method="get" class="trf-form-row">
+
+      {# ===== DİĞER GET PARAMETRELERİNİ KORU (q hariç) ===== #}
+      {% for key, values in request.GET.lists %}
+        {% if key != pname|add:'_baslangic' and key != pname|add:'_bitis' and key != pname and key != 'q' %}
+          {% for v in values %}
+            <input type="hidden" name="{{ key }}" value="{{ v }}">
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+
+      {# q varsa ve DOLUYSA koru, boşsa ekleme #}
+      {% if request.GET.q %}
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+      {% endif %}
+
+      <div class="trf-date-item">
+        <label class="trf-label">Başlangıç</label>
+        <input type="date" name="{{ pname }}_baslangic" class="trf-input">
+      </div>
+
+      <div class="trf-date-item">
+        <label class="trf-label">Bitiş</label>
+        <input type="date" name="{{ pname }}_bitis" class="trf-input">
+      </div>
+
+      <button type="submit" class="trf-submit">✓ Uygula</button>
+
+    </form>
+
+  </div>
+</details>
+
+{% endwith %}

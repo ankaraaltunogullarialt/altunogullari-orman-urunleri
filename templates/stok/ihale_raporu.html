@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}İhale Raporu{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">İhale Raporu</h1>
+
+    <!-- ===== İHALE RAPORLARI KISAYOLLARI ===== -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <a href="{% url 'stok:ihale_genel_raporu' %}" class="text-decoration-none">
+                <div class="card bg-primary text-white h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file-contract fa-3x mb-2"></i>
+                        <h5 class="mb-1">Genel Rapor</h5>
+                        <small>Tüm ihaleler — tarih, tedarikçi filtreli</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'stok:ihale_kik_icmal_raporu' %}" class="text-decoration-none">
+                <div class="card bg-info text-white h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-layer-group fa-3x mb-2"></i>
+                        <h5 class="mb-1">KİK İcmal Raporu</h5>
+                        <small>Aynı KİK'e ait partiler + ortalama fiyat</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'stok:ihale_boy_analiz_raporu' %}" class="text-decoration-none">
+                <div class="card bg-warning text-dark h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-ruler fa-3x mb-2"></i>
+                        <h5 class="mb-1">Boy Analiz Raporu</h5>
+                        <small>Hangi boydan kaç m³ alınmış</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== İSTATİSTİK KARTLARI ===== -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Toplam İhale</h5>
+                    <h2>{{ toplam_ihale|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Aktif İhaleler</h5>
+                    <h2>{{ aktif_ihale|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Tamamlanan</h5>
+                    <h2>{{ tamamlanan_ihale|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">İptal</h5>
+                    <h2>{{ iptal_ihale|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MİKTAR / ADET / ÖDEME ===== -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📦 Miktar Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Toplam İhale Miktarı:</strong></td>
+                            <td class="text-end"><span class="badge bg-primary fs-6">{{ toplam_ihale_miktari|floatformat:4|default:"0.0000" }}</span> m³</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Devam Eden Miktar:</strong></td>
+                            <td class="text-end"><span class="badge bg-info fs-6">{{ devam_eden_miktar|floatformat:4|default:"0.0000" }}</span> m³</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Toplam Gelen Miktar:</strong></td>
+                            <td class="text-end"><span class="badge bg-success fs-6">{{ toplam_gelen_miktar|floatformat:4|default:"0.0000" }}</span> m³</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Toplam Kalan Miktar:</strong></td>
+                            <td class="text-end"><span class="badge bg-warning fs-6">{{ toplam_kalan_miktar|floatformat:4|default:"0.0000" }}</span> m³</td>
+                        </tr>
+                                                <!-- ===== TAMAMEN ÖDENMİŞ KALAN ===== -->
+                        <tr style="background: #d1e7dd; border-top: 2px solid #198754;">
+                            <td>
+                                <strong>✅ Tamamen Ödenmiş Kalan:</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ tamamen_odenmis_sayisi|default:0 }} ihale —
+                                    {{ tamamen_odenmis_toplam|floatformat:4|default:"0.0000" }} m³ toplam
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-success fs-5">{{ tamamen_odenmis_kalan|floatformat:4|default:"0.0000" }}</span> m³
+                            </td>
+                        </tr>
+
+                        <!-- ===== KİK BAZLI TOPLAM MİKTAR (YENİ) ===== -->
+                        <tr style="background: #e7f1ff; border-top: 2px solid #0d6efd;">
+                            <td>
+                                <strong>🔵 KİK Bazlı Toplam Miktar:</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ kik_sayisi|default:0 }} farklı KİK — 
+                                    {{ kik_bazli_kayit_sayisi|default:0 }} parti
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-primary fs-5">{{ kik_bazli_toplam_miktar|floatformat:4|default:"0.0000" }}</span> m³
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Toplam İhale Tutarı:</strong></td>
+                            <td class="text-end"><span class="badge bg-dark fs-6">{{ toplam_ihale_tutari|floatformat:2|default:"0.00" }}</span> TL</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🔢 Adet Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Toplam İhale Adet:</strong></td>
+                            <td class="text-end"><span class="badge bg-primary fs-6">{{ toplam_ihale_adet|default:0 }}</span> Adet</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Toplam Kalan Adet:</strong></td>
+                            <td class="text-end"><span class="badge bg-warning fs-6">{{ toplam_kalan_adet|default:0 }}</span> Adet</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+                <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">💳 Ödeme Durumu</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <!-- Tamamen Ödendi -->
+                        <tr style="background: #d1e7dd;">
+                            <td style="vertical-align: middle;">
+                                <span class="badge bg-success">Tamamen Ödendi</span>
+                                <br>
+                                <small class="text-muted">
+                                    <strong>{{ odendiler|default:0 }}</strong> ihale
+                                </small>
+                            </td>
+                            <td class="text-end" style="vertical-align: middle;">
+                                <div style="font-size: 15px; font-weight: 700; color: #198754;">
+                                    {{ odendiler_miktar|floatformat:4|default:"0.0000" }} m³
+                                </div>
+                                <small class="text-muted">
+                                    Kalan: <strong>{{ odendiler_kalan|floatformat:4|default:"0.0000" }}</strong> m³
+                                </small>
+                            </td>
+                        </tr>
+                        <!-- Kısmi Ödendi -->
+                        <tr style="background: #fff3cd;">
+                            <td style="vertical-align: middle;">
+                                <span class="badge bg-warning text-dark">Kısmi Ödendi</span>
+                                <br>
+                                <small class="text-muted">
+                                    <strong>{{ kismi_odenmis|default:0 }}</strong> ihale
+                                </small>
+                            </td>
+                            <td class="text-end" style="vertical-align: middle;">
+                                <div style="font-size: 15px; font-weight: 700; color: #ffc107;">
+                                    {{ kismi_odenmis_miktar|floatformat:4|default:"0.0000" }} m³
+                                </div>
+                                <small class="text-muted">
+                                    Kalan: <strong>{{ kismi_odenmis_kalan|floatformat:4|default:"0.0000" }}</strong> m³
+                                </small>
+                            </td>
+                        </tr>
+                        <!-- Ödenmedi -->
+                        <tr style="background: #f8d7da;">
+                            <td style="vertical-align: middle;">
+                                <span class="badge bg-danger">Ödenmedi</span>
+                                <br>
+                                <small class="text-muted">
+                                    <strong>{{ odenmemis|default:0 }}</strong> ihale
+                                </small>
+                            </td>
+                            <td class="text-end" style="vertical-align: middle;">
+                                <div style="font-size: 15px; font-weight: 700; color: #dc3545;">
+                                    {{ odenmemis_miktar|floatformat:4|default:"0.0000" }} m³
+                                </div>
+                                <small class="text-muted">
+                                    Kalan: <strong>{{ odenmemis_kalan|floatformat:4|default:"0.0000" }}</strong> m³
+                                </small>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    <!-- ===== SON 5 İHALE ===== -->
+    {% if son_ihaleler %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">📋 Son 5 İhale</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>KİK No</th>
+                            <th>Tedarikçi</th>
+                            <th>Miktar (m³)</th>
+                            <th>Kalan (m³)</th>
+                            <th>Adet</th>
+                            <th>Kalan Adet</th>
+                            <th>Durum</th>
+                            <th>Ödeme</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ihale in son_ihaleler %}
+                        <tr>
+                            <td><strong>{{ ihale.kik_no|default:"-" }}</strong></td>
+                            <td>{{ ihale.tedarikci.unvan|default:"-" }}</td>
+                            <td>{{ ihale.toplam_ihale_miktari|floatformat:4 }}</td>
+                            <td>{{ ihale.kalan_miktar|floatformat:4 }}</td>
+                            <td>{{ ihale.toplam_adet }}</td>
+                            <td>{{ ihale.kalan_adet }}</td>
+                            <td>
+                                {% if ihale.durum == 'devam_ediyor' %}
+                                    <span class="badge bg-warning">Devam Ediyor</span>
+                                {% elif ihale.durum == 'tamamlandi' %}
+                                    <span class="badge bg-success">Tamamlandı</span>
+                                {% else %}
+                                    <span class="badge bg-danger">İptal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ihale.odeme_durumu == 'tamamen_odendi' %}
+                                    <span class="badge bg-success">Ödendi</span>
+                                {% elif ihale.odeme_durumu == 'kismi_odendi' %}
+                                    <span class="badge bg-warning">Kısmi</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Ödenmedi</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'stok:ihale_detay_raporu' ihale.id %}" class="btn btn-sm btn-info">
+                                    Detay
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== TÜM İHALELER ===== -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">📋 Tüm İhaleler ({{ ihaleler|length }} Kayıt)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="ihaleTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>KİK No</th>
+                            <th>Tedarikçi</th>
+                            <th>Parti No</th>
+                            <th>İstif No</th>
+                            <th>Miktar (m³)</th>
+                            <th>Kalan (m³)</th>
+                            <th>Adet</th>
+                            <th>Kalan Adet</th>
+                            <th>Durum</th>
+                            <th>Ödeme</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ihale in ihaleler %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ ihale.kik_no|default:"-" }}</strong></td>
+                            <td>{{ ihale.tedarikci.unvan|default:"-" }}</td>
+                            <td>{{ ihale.parti_no|default:"-" }}</td>
+                            <td>{{ ihale.istif_no|default:"-" }}</td>
+                            <td class="text-end">{{ ihale.toplam_ihale_miktari|floatformat:4 }}</td>
+                            <td class="text-end {% if ihale.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">
+                                {{ ihale.kalan_miktar|floatformat:4 }}
+                            </td>
+                            <td class="text-end">{{ ihale.toplam_adet }}</td>
+                            <td class="text-end {% if ihale.kalan_adet > 0 %}text-warning{% else %}text-success{% endif %}">
+                                {{ ihale.kalan_adet }}
+                            </td>
+                            <td>
+                                {% if ihale.durum == 'devam_ediyor' %}
+                                    <span class="badge bg-warning">Devam</span>
+                                {% elif ihale.durum == 'tamamlandi' %}
+                                    <span class="badge bg-success">Tamam</span>
+                                {% else %}
+                                    <span class="badge bg-danger">İptal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ihale.odeme_durumu == 'tamamen_odendi' %}
+                                    <span class="badge bg-success">Ödendi</span>
+                                {% elif ihale.odeme_durumu == 'kismi_odendi' %}
+                                    <span class="badge bg-warning">Kısmi</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Ödenmedi</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'stok:ihale_detay_raporu' ihale.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="12" class="text-center py-4">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i> Henüz ihale kaydı bulunmamaktadır.
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if ihaleler %}
+                    <tfoot>
+                        <tr class="table-dark fw-bold">
+                            <td colspan="5" class="text-end">TOPLAM:</td>
+                            <td class="text-end text-primary">{{ toplam_ihale_miktari|floatformat:4 }}</td>
+                            <td class="text-end text-warning">{{ toplam_kalan_miktar|floatformat:4 }}</td>
+                            <td class="text-end text-primary">{{ toplam_ihale_adet|default:0 }}</td>
+                            <td class="text-end text-warning">{{ toplam_kalan_adet|default:0 }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

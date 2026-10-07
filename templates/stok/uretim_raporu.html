@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Üretim Raporu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-industry text-success"></i> Üretim Raporu</h1>
+        <p class="lead">Üretim istatistikleri ve analizler</p>
+        <hr>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-check-circle"></i> Tamamlanan</h5>
+                <h2>{{ toplam_uretim|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-spinner"></i> Devam Eden</h5>
+                <h2>{{ devam_eden|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-clock"></i> Planlanan</h5>
+                <h2>{{ planlanan|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tablo (İleride detaylı rapor için) -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-list"></i> Üretim Özeti
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Detaylı üretim raporu için üretim modülünü ziyaret edin.
+        </div>
+        <a href="/admin/stok/uretim/" class="btn btn-primary">
+            <i class="fas fa-arrow-right"></i> Üretim Yönetimine Git
+        </a>
+    </div>
+</div>
+{% endblock %}

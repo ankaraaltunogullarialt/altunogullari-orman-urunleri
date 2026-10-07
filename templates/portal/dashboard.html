@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Portal - Raporlar{% endblock %}
+
+{% block content %}
+<div class="portal-dashboard-shell">
+    <div class="portal-topbar">
+        <div class="portal-user-icon">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <div>
+            <h1 class="portal-title">{{ selamlama }}, {{ user_name }}</h1>
+            <p class="portal-subtitle">Altunoğulları Orman Ürünleri Yönetim Sistemine hoş geldiniz. Güncel veriler aşağıdadır.</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card text-white bg-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h6 class="card-title mb-0">Toplam Miktar</h6>
+                            <small style="opacity: 0.85;">Tüm ihaleler</small>
+                            <h3 class="card-text mb-0">{{ toplam_miktar|floatformat:4|default:"0.00" }} m³</h3>
+                        </div>
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 6px 0;">
+                    <div class="mb-1">
+                        <small style="opacity: 0.85;">Devam Eden Partiler:</small>
+                        <div style="font-size: 15px; font-weight: 700;">{{ toplam_miktar|floatformat:4|default:"0.00" }} m³</div>
+                    </div>
+                    <div>
+                        <small style="opacity: 0.85;">Devam Eden İhaleler:</small>
+                        <div style="font-size: 15px; font-weight: 700; color: #ffc107;">{{ toplam_miktar|floatformat:4|default:"0.00" }} m³</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card text-white bg-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h6 class="card-title mb-0">Toplam Kalan</h6>
+                            <small style="opacity: 0.85;">Tüm ihaleler</small>
+                            <h3 class="card-text mb-0">{{ toplam_kalan|floatformat:4|default:"0.00" }} m³</h3>
+                        </div>
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 6px 0;">
+                    <div>
+                        <small style="opacity: 0.9;">
+                            Devam Eden Partiler:
+                            <div style="font-size: 15px; font-weight: 700;">{{ toplam_kalan|floatformat:4|default:"0.00" }} m³</div>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card text-white bg-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Aktif İhale</h6>
+                            <h2 class="card-text">{{ aktif_ihale_sayisi|default:0 }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card text-white bg-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Kritik İhale Stoğu</h6>
+                            <h2 class="card-text">{{ kritik_ihale_stok|default:0 }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-7 col-md-12 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-clock"></i> Son 7 Gün Stok Hareketleri
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ürün</th>
+                                    <th>Tip</th>
+                                    <th>Miktar</th>
+                                    <th>Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hareket in son_hareketler %}
+                                <tr>
+                                    <td>{{ hareket.urun.urun_adi|truncatechars:20|default:"-" }}</td>
+                                    <td><span class="badge bg-secondary">{{ hareket.get_hareket_tipi_display|default:"-" }}</span></td>
+                                    <td>{{ hareket.miktar|floatformat:4|default:"0.00" }} m³</td>
+                                    <td>{{ hareket.tarih|date:"d.m H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center">Henüz hareket yok</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-md-12 mb-3">
+            <div class="card h-100 active-ihale-card">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-gavel"></i> Aktif İhaleler
+                </div>
+                <div class="card-body active-ihale-card-body">
+                    <div class="dashboard-scroll-table active-ihale-table">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>KİK No</th>
+                                        <th>Parti No</th>
+                                        <th>Miktar</th>
+                                        <th>Kalan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ihale in aktif_ihaleler %}
+                                    <tr>
+                                        <td><strong>{{ ihale.kik_no|default:"-" }}</strong></td>
+                                        <td>{{ ihale.parti_no|default:"-" }}</td>
+                                        <td class="text-end">{{ ihale.toplam_ihale_miktari|floatformat:4|default:"0.0000" }}</td>
+                                        <td class="text-end {% if ihale.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">{{ ihale.kalan_miktar|floatformat:4|default:"0.0000" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="text-center">Aktif ihale bulunmamaktadır.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2 active-ihale-summary">
+                        <small>Toplam Miktar: <strong>{{ toplam_ihale_miktar|floatformat:4|default:"0.0000" }}</strong> m³</small>
+                        <br>
+                        <small>Toplam Kalan: <strong>{{ toplam_kalan_miktar|floatformat:4|default:"0.0000" }}</strong> m³</small>
+                        <br>
+                        <small>Aktif İhale Sayısı: <strong>{{ aktif_ihale_sayisi|default:0 }}</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-money-bill-wave"></i> Finansal Durum
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h6>Alacak</h6>
+                            <h4 class="text-success">{{ toplam_alacak|floatformat:4|default:"0.00" }} TL</h4>
+                        </div>
+                        <div class="col-4">
+                            <h6>Borç</h6>
+                            <h4 class="text-danger">{{ toplam_borc|floatformat:4|default:"0.00" }} TL</h4>
+                        </div>
+                        <div class="col-4">
+                            <h6>Net</h6>
+                            <h4 class="{% if net_bakiye >= 0 %}text-success{% else %}text-danger{% endif %}">{{ net_bakiye|floatformat:4|default:"0.00" }} TL</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

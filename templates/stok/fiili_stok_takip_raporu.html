@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- BAŞLIK -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="fas fa-clipboard-list"></i> Fiili Stok Takip Raporu</h3>
+        <div>
+            <a href="?{{ request.GET.urlencode }}&excel=1" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Yazdır
+            </button>
+        </div>
+    </div>
+    
+    <!-- FİLTRELER -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2">
+                <div class="col-md-2">
+                    <label class="form-label">Dönem</label>
+                    <select name="donem" class="form-select" onchange="this.form.submit()">
+                        {% for kod, etiket in donem_secenekleri %}
+                        <option value="{{ kod }}" {% if donem == kod %}selected{% endif %}>{{ etiket }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                {% if donem == 'ozel' %}
+                <div class="col-md-2">
+                    <label class="form-label">Başlangıç</label>
+                    <input type="date" name="baslangic" class="form-control" value="{{ baslangic_str }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Bitiş</label>
+                    <input type="date" name="bitis" class="form-control" value="{{ bitis_str }}">
+                </div>
+                {% endif %}
+                
+                <div class="col-md-2">
+                    <label class="form-label">Tedarikçi</label>
+                    <select name="tedarikci" class="form-select">
+                        <option value="">-- Tümü --</option>
+                        {% for t in tedarikciler %}
+                        <option value="{{ t.id }}" {% if tedarikci_id == t.id|stringformat:'s' %}selected{% endif %}>{{ t.unvan }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">Parti No</label>
+                    <input type="text" name="parti_no" class="form-control" value="{{ parti_no }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">Boy</label>
+                    <select name="boy" class="form-select">
+                        <option value="">-- Tümü --</option>
+                        {% for b in boy_secenekleri %}
+                        <option value="{{ b }}" {% if boy == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Ara
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- RAPOR BAŞLIĞI -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                FİİLİ STOK TAKİP RAPORU
+                <small class="float-end">
+                    Dönem: {{ baslangic|date:"d.m.Y" }} - {{ bitis|date:"d.m.Y" }}
+                </small>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">Tarih</th>
+                        <th>Tedarikçi</th>
+                        <th class="text-center">Parti No</th>
+                        <th class="text-center">İstif No</th>
+                        <th>Boy</th>
+                        <th class="text-end">Miktar (m³)</th>
+                        <th class="text-center">Adet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if devir %}
+                    <tr class="table-warning">
+                        <td class="text-center"><strong>DEVİR</strong></td>
+                        <td><strong>{{ devir.donem_etiketi }} Devri</strong></td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td>-</td>
+                        <td class="text-end"><strong>{{ devir.devir_miktar|floatformat:4 }}</strong></td>
+                        <td class="text-center">-</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% for s in sevkler %}
+                    <tr>
+                        <td class="text-center">{{ s.sevk_tarihi|date:"d.m.Y" }}</td>
+                        <td>{{ s.ihale.tedarikci.unvan|default:"-" }}</td>
+                        <td class="text-center">{{ s.ihale.parti_no|default:"-" }}</td>
+                        <td class="text-center">{{ s.ihale.istif_no|default:"-" }}</td>
+                        <td>{{ s.ihale.boy|default:"-" }}</td>
+                        <td class="text-end">{{ s.sevk_miktar|floatformat:4 }}</td>
+                        <td class="text-center">{{ s.sevk_adet }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Bu dönemde kayıt bulunamadı.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="table-success">
+                        <td colspan="5" class="text-end"><strong>DÖNEM TOPLAMI:</strong></td>
+                        <td class="text-end"><strong>{{ toplam_miktar|floatformat:4 }}</strong></td>
+                        <td class="text-center"><strong>{{ toplam_adet }}</strong></td>
+                    </tr>
+                    {% if devir %}
+                    <tr class="table-primary">
+                        <td colspan="5" class="text-end"><strong>GENEL TOPLAM (Devir + Dönem):</strong></td>
+                        <td class="text-end"><strong>{{ genel_toplam|floatformat:4 }}</strong></td>
+                        <td class="text-center">-</td>
+                    </tr>
+                    {% endif %}
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <small class="text-muted">
+            Toplam {{ kayit_sayisi }} kayıt gösteriliyor.
+        </small>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    {{ block.super }}
+    
+    {% if cl.result_list %}
+    <div style="margin-top: 15px; background: #f8f9fa; border-radius: 8px; border: 2px solid #0d6efd; padding: 10px 15px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #0d6efd; color: white; font-weight: bold; font-size: 15px; text-align: center;">
+                <td style="padding: 12px 15px; border-radius: 6px 0 0 6px; width: 15%;">
+                    <i class="fas fa-calculator"></i> TOPLAM
+                </td>
+                <td style="padding: 12px 15px; width: 17%;">
+                    {{ total_miktar|floatformat:2 }} m³
+                </td>
+                <td style="padding: 12px 15px; width: 17%; background: #0a58ca; color: #ffc107;">
+                    {{ total_kalan|floatformat:2 }} m³
+                </td>
+                <td style="padding: 12px 15px; width: 17%;">
+                    {{ total_adet }}
+                </td>
+                <td style="padding: 12px 15px; width: 17%; background: #0a58ca; color: #ffc107;">
+                    {{ total_kalan_adet }}
+                </td>
+                <td style="padding: 12px 15px; border-radius: 0 6px 6px 0; width: 17%;">
+                    <span class="badge bg-info" style="font-size: 14px; padding: 5px 15px;">
+                        {{ total_kayit }} Kayıt
+                    </span>
+                </td>
+            </tr>
+        </table>
+        <div style="font-size: 12px; color: #6c757d; text-align: right; margin-top: 5px;">
+            Filtrelenmiş verilere göre hesaplanmıştır.
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .toplam-satir {
+        background: #0d6efd !important;
+        color: white !important;
+        font-weight: bold !important;
+    }
+    .toplam-satir td {
+        padding: 12px 15px !important;
+        border: 1px solid #0a58ca !important;
+        text-align: center !important;
+    }
+    .toplam-deger {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+    }
+    .toplam-baslik {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+    }
+</style>
+{% endblock %}

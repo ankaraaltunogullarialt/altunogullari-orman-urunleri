@@ -1,0 +1,31 @@
+{% extends "admin/change_list.html" %}
+
+{% block filters %}
+    {{ block.super }}
+    
+    <!-- Özel Tarih Aralığı Formu -->
+    <div class="module" style="margin-top: 10px;">
+        <h2>Özel Tarih Aralığı</h2>
+        <form method="get" style="padding: 10px;">
+            <div style="margin-bottom: 5px;">
+                <label for="tarih_baslangic">Başlangıç:</label>
+                <input type="date" name="tarih_baslangic" id="tarih_baslangic" 
+                       value="{{ request.GET.tarih_baslangic|default:'' }}" 
+                       class="form-control" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 5px;">
+                <label for="tarih_bitis">Bitiş:</label>
+                <input type="date" name="tarih_bitis" id="tarih_bitis" 
+                       value="{{ request.GET.tarih_bitis|default:'' }}" 
+                       class="form-control" style="width: 100%;">
+            </div>
+            <input type="hidden" name="tarih_araligi" value="ozel">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-search"></i> Filtrele
+            </button>
+            <a href="?" class="btn btn-secondary" style="width: 100%; margin-top: 5px;">
+                <i class="fas fa-times"></i> Temizle
+            </a>
+        </form>
+    </div>
+{% endblock %}

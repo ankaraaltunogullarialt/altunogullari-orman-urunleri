@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Personel Raporu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-users text-primary"></i> Personel Raporu</h1>
+        <hr>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mt-3">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h5>Toplam Personel</h5>
+                <h2>{{ toplam_personel }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5>Aktif Personel</h5>
+                <h2>{{ aktif_personel }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h5>İzinli Personel</h5>
+                <h2>{{ izinli_personel }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h5>Kadın / Erkek</h5>
+                <h2>{{ kadin_sayisi }} / {{ erkek_sayisi }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Departman Dağılımı -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-building"></i> Departmanlara Göre Personel Dağılımı
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Departman</th>
+                        <th>Personel Sayısı</th>
+                        <th>Oran</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departman_dagilimi %}
+                    <tr>
+                        <td>{{ dept.ad }}</td>
+                        <td>{{ dept.personel_sayisi }}</td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ dept.personel_sayisi|divisibleby:toplam_personel }}%">
+                                    {{ dept.personel_sayisi|divisibleby:toplam_personel }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center">Departman bulunamadı</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Satış Raporu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-chart-bar text-primary"></i> Satış Raporu</h1>
+        <hr>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mt-3">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h5>Toplam Satış</h5>
+                <h2>{{ toplam_satis }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5>Toplam Tutar</h5>
+                <h2>{{ toplam_tutar|floatformat:2 }} TL</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body text-center">
+                <h5>Toplam İade</h5>
+                <h2>{{ toplam_iade }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Son Satışlar -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-clock"></i> Son 30 Gün Satışlar
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Satış No</th>
+                        <th>Müşteri</th>
+                        <th>Ürün</th>
+                        <th>Miktar</th>
+                        <th>Tutar</th>
+                        <th>Durum</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for satis in son_satislar %}
+                    <tr>
+                        <td>{{ satis.satis_no }}</td>
+                        <td>{{ satis.musteri.unvan }}</td>
+                        <td>{{ satis.urun.urun_adi }}</td>
+                        <td>{{ satis.miktar|floatformat:2 }} m³</td>
+                        <td>{{ satis.toplam_tutar|floatformat:2 }} TL</td>
+                        <td><span class="badge bg-info">{{ satis.get_durum_display }}</span></td>
+                        <td>{{ satis.siparis_tarihi|date:"d.m.Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center">Henüz satış yok</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

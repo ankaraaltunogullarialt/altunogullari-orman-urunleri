@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% block title %}İhale Raporu{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <h1 class="mb-4"><i class="fas fa-gavel text-primary"></i> İhale Detay Raporu</h1>
+
+    <!-- ===== FİLTRE FORMU ===== -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white"><i class="fas fa-filter"></i> Filtreler</div>
+        <div class="card-body">
+            <form method="get" action="">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">KİK No</label>
+                        <select name="kik_no" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for k in kik_secenekleri %}
+                                <option value="{{ k }}" {% if kik_no == k %}selected{% endif %}>{{ k }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Boy</label>
+                        <select name="boy" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for b in boy_secenekleri %}
+                                <option value="{{ b }}" {% if boy == b %}selected{% endif %}>{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Tedarikçi</label>
+                        <select name="tedarikci" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for t in tedarikciler %}
+                                <option value="{{ t.id }}" {% if tedarikci_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t.unvan }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Başlangıç</label>
+                        <input type="date" name="baslangic" value="{{ baslangic }}" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Bitiş</label>
+                        <input type="date" name="bitis" value="{{ bitis }}" class="form-control">
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-search"></i> Filtrele</button>
+                    <a href="{% url 'stok:ihale_genel_raporu' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Temizle</a>
+                    {% if kik_no or boy or tedarikci_id or baslangic or bitis %}
+                        <a href="?{{ request.GET.urlencode }}&excel=1" class="btn btn-warning ms-auto"><i class="fas fa-file-excel"></i> Excel İndir</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== KİK İCMAL GÖRÜNÜMÜ ===== -->
+    {% if kik_no and icmal_ihaleler %}
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-layer-group"></i> KİK No: <strong>{{ kik_no }}</strong> — İcmal ({{ icmal_toplam.parti_sayisi }} parti)
+        </div>
+        <div class="card-body">
+
+            <!-- ÖZET KARTLAR -->
+            <div class="row mb-3">
+                <div class="col-md-3"><div class="card bg-info text-white"><div class="card-body"><h6>Parti Sayısı</h6><h3>{{ icmal_toplam.parti_sayisi }}</h3></div></div></div>
+                <div class="col-md-3"><div class="card bg-primary text-white"><div class="card-body"><h6>Toplam Miktar</h6><h3>{{ icmal_toplam.toplam_miktar|floatformat:2 }} m³</h3></div></div></div>
+                <div class="col-md-3"><div class="card bg-warning text-dark"><div class="card-body"><h6>Toplam Kalan</h6><h3>{{ icmal_toplam.toplam_kalan|floatformat:2 }} m³</h3></div></div></div>
+                <div class="col-md-3"><div class="card bg-success text-white"><div class="card-body"><h6>Toplam Tutar</h6><h3>{{ icmal_toplam.toplam_tutar|floatformat:2 }} TL</h3></div></div></div>
+            </div>
+
+            <div class="alert alert-success">
+                <i class="fas fa-calculator"></i> <strong>Ortalama Alış Fiyatı:</strong>
+                <span class="badge bg-success fs-6">{{ icmal_toplam.ortalama_fiyat|floatformat:4 }} TL/m³</span>
+                <small class="text-muted ms-2">(Toplam Tutar / Toplam m³)</small>
+            </div>
+
+            <!-- İCMAL TABLOSU -->
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Parti No</th><th>İstif No</th><th>Boy</th><th>Tedarikçi</th><th>Alış Tarihi</th>
+                            <th class="text-end">Miktar</th><th class="text-end">Kalan</th>
+                            <th class="text-end">Adet</th><th class="text-end">Birim Fiyat</th>
+                            <th class="text-end">Toplam Tutar</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in icmal_ihaleler %}
+                        <tr>
+                            <td><strong>{{ i.parti_no|default:"-" }}</strong></td>
+                            <td>{{ i.istif_no|default:"-"|truncatechars:15 }}</td>
+                            <td>{{ i.boy|default:"-" }}</td>
+                            <td>{{ i.tedarikci.unvan|default:"-"|truncatechars:20 }}</td>
+                            <td>{{ i.alis_tarihi|date:"d.m.Y" }}</td>
+                            <td class="text-end">{{ i.toplam_ihale_miktari|floatformat:4 }}</td>
+                            <td class="text-end fw-bold {% if i.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">{{ i.kalan_miktar|floatformat:4 }}</td>
+                            <td class="text-end">{{ i.toplam_adet }}</td>
+                            <td class="text-end">{{ i.birim_fiyat|floatformat:2 }}</td>
+                            <td class="text-end fw-bold">{{ i.toplam_tutar|floatformat:2 }}</td>
+                            <td><a href="{% url 'stok:ihale_detay_raporu' i.id %}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-primary fw-bold">
+                        <tr>
+                            <td colspan="5" class="text-end">TOPLAM:</td>
+                            <td class="text-end">{{ icmal_toplam.toplam_miktar|floatformat:4 }}</td>
+                            <td class="text-end">{{ icmal_toplam.toplam_kalan|floatformat:4 }}</td>
+                            <td class="text-end">{{ icmal_toplam.toplam_adet }}</td>
+                            <td></td>
+                            <td class="text-end">{{ icmal_toplam.toplam_tutar|floatformat:2 }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== GENEL LİSTE ===== -->
+    {% if ihaleler %}
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-list"></i> İhaleler ({{ ihaleler|length }} kayıt)
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>KİK No</th><th>Parti No</th><th>Boy</th><th>Tedarikçi</th>
+                            <th>Alış Tarihi</th>
+                            <th class="text-end">Miktar</th><th class="text-end">Kalan</th>
+                            <th class="text-end">Toplam Tutar</th><th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in ihaleler %}
+                        <tr>
+                            <td><strong>{{ i.kik_no|default:"-" }}</strong></td>
+                            <td>{{ i.parti_no|default:"-" }}</td>
+                            <td>{{ i.boy|default:"-" }}</td>
+                            <td>{{ i.tedarikci.unvan|default:"-"|truncatechars:20 }}</td>
+                            <td>{{ i.alis_tarihi|date:"d.m.Y" }}</td>
+                            <td class="text-end">{{ i.toplam_ihale_miktari|floatformat:4 }}</td>
+                            <td class="text-end fw-bold {% if i.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">{{ i.kalan_miktar|floatformat:4 }}</td>
+                            <td class="text-end">{{ i.toplam_tutar|floatformat:2 }}</td>
+                            <td><a href="{% url 'stok:ihale_detay_raporu' i.id %}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== TEK İHALE DETAYI ===== -->
+    {% if tek_ihale %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-contract text-primary"></i> Detay: {{ tek_ihale.kik_no }} - {{ tek_ihale.parti_no }}</h2>
+        <a href="{% url 'stok:ihale_genel_raporu' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white"><i class="fas fa-info-circle"></i> İhale Bilgileri</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-2"><strong>KİK No:</strong> {{ tek_ihale.kik_no|default:"-" }}</div>
+                <div class="col-md-3 mb-2"><strong>Tedarikçi:</strong> {{ tek_ihale.tedarikci.unvan|default:"-" }}</div>
+                <div class="col-md-3 mb-2"><strong>Parti:</strong> {{ tek_ihale.parti_no|default:"-" }}</div>
+                <div class="col-md-3 mb-2"><strong>İstif No:</strong> {{ tek_ihale.istif_no|default:"-" }}</div>
+                <div class="col-md-3 mb-2"><strong>Boy:</strong> {{ tek_ihale.boy|default:"-" }}</div>
+                <div class="col-md-3 mb-2"><strong>Alış Tarihi:</strong> {{ tek_ihale.alis_tarihi|date:"d.m.Y" }}</div>
+                <div class="col-md-3 mb-2"><strong>Toplam Miktar:</strong> {{ tek_ihale.toplam_ihale_miktari|floatformat:4 }} m³</div>
+                <div class="col-md-3 mb-2"><strong>Gelen:</strong> {{ toplam_gelen|floatformat:4 }} m³</div>
+                <div class="col-md-3 mb-2"><strong>Kalan:</strong> {{ tek_ihale.kalan_miktar|floatformat:4 }} m³</div>
+                <div class="col-md-3 mb-2"><strong>Toplam Adet:</strong> {{ tek_ihale.toplam_adet }}</div>
+                <div class="col-md-3 mb-2"><strong>Gelen Adet:</strong> {{ toplam_gelen_adet }}</div>
+                <div class="col-md-3 mb-2"><strong>Kalan Adet:</strong> {{ tek_ihale.kalan_adet }}</div>
+                <div class="col-md-3 mb-2"><strong>Birim Fiyat:</strong> {{ tek_ihale.birim_fiyat|floatformat:2 }} TL</div>
+                <div class="col-md-3 mb-2"><strong>Toplam Tutar:</strong> {{ tek_ihale.toplam_tutar|floatformat:2 }} TL</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sevkler -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-truck"></i> Sevkler ({{ sevkler|length }})
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Sevk Tarihi</th>
+                        <th class="text-end">Miktar (m³)</th>
+                        <th class="text-end">Adet</th>
+                        <th class="text-end">Kalan Miktar</th>
+                        <th class="text-end">Kalan Adet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sevkler %}
+                    <tr>
+                        <td>{{ s.sevk_tarihi|date:"d.m.Y" }}</td>
+                        <td class="text-end">{{ s.sevk_miktar|floatformat:4 }}</td>
+                        <td class="text-end">{{ s.sevk_adet }}</td>
+                        <td class="text-end">{{ s.kalan_miktar|floatformat:4 }}</td>
+                        <td class="text-end">{{ s.kalan_adet }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-3 text-muted">Sevk yok.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Hareketler -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <i class="fas fa-exchange-alt"></i> Stok Hareketleri ({{ hareketler|length }})
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Tarih</th><th>Tip</th><th>Ürün</th>
+                        <th class="text-end">Miktar</th>
+                        <th class="text-end">Tutar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in hareketler %}
+                    <tr>
+                        <td>{{ h.tarih|date:"d.m.Y H:i" }}</td>
+                        <td><span class="badge bg-secondary">{{ h.get_hareket_tipi_display }}</span></td>
+                        <td>{{ h.urun.urun_adi|default:"-" }}</td>
+                        <td class="text-end">{{ h.miktar|floatformat:4 }}</td>
+                        <td class="text-end">{{ h.toplam_tutar|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-3 text-muted">Hareket yok.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

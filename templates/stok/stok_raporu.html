@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stok Raporu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1><i class="fas fa-boxes text-primary"></i> Stok Raporu</h1>
+        <p class="lead">Tüm ürünlerin stok durumu ve hareket analizi</p>
+        <hr>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h5>Toplam Ürün</h5>
+                <h2>{{ toplam_urun }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h5>Toplam Stok</h5>
+                <h2>{{ toplam_miktar|floatformat:2 }} m³</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body text-center">
+                <h5>Kritik Stok</h5>
+                <h2>{{ kritik_sayisi }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h5>Giriş - Çıkış</h5>
+                <h2>{{ giris_cikis_farki|floatformat:2 }} m³</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtreler -->
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-filter"></i> Filtreler
+    </div>
+    <div class="card-body">
+        <form method="get" class="row">
+            <div class="col-md-3">
+                <label>Ürün Tipi</label>
+                <select name="urun_tipi" class="form-select">
+                    <option value="">Tümü</option>
+                    {% for tip in urun_tipi_secenekleri %}
+                    <option value="{{ tip.0 }}" {% if request.GET.urun_tipi == tip.0 %}selected{% endif %}>
+                        {{ tip.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Kategori</label>
+                <select name="kategori" class="form-select">
+                    <option value="">Tümü</option>
+                    {% for kat in kategori_secenekleri %}
+                    <option value="{{ kat.0 }}" {% if request.GET.kategori == kat.0 %}selected{% endif %}>
+                        {{ kat.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Stok Durumu</label>
+                <select name="stok_durumu" class="form-select">
+                    <option value="">Tümü</option>
+                    <option value="stokta" {% if request.GET.stok_durumu == 'stokta' %}selected{% endif %}>Stokta Var</option>
+                    <option value="kritik" {% if request.GET.stok_durumu == 'kritik' %}selected{% endif %}>Kritik (< 10 m³)</option>
+                    <option value="tukendi" {% if request.GET.stok_durumu == 'tukendi' %}selected{% endif %}>Tükendi</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fas fa-search"></i> Filtrele
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Ürün Listesi -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-list"></i> Ürün Listesi
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Kod</th>
+                        <th>Ürün</th>
+                        <th>Tip</th>
+                        <th>Kategori</th>
+                        <th>Mevcut Stok</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for urun in urunler %}
+                    <tr>
+                        <td>{{ urun.urun_kodu }}</td>
+                        <td>{{ urun.urun_adi }}</td>
+                        <td>{{ urun.get_urun_tipi_display }}</td>
+                        <td>{{ urun.get_kategori_display|default:"-" }}</td>
+                        <td>
+                            <strong {% if urun.mevcut_miktar < 10 %}class="text-danger"{% endif %}>
+                                {{ urun.mevcut_miktar|floatformat:2 }} m³
+                            </strong>
+                        </td>
+                        <td>
+                            {% if urun.stokta_mi %}
+                                {% if urun.mevcut_miktar < 10 %}
+                                <span class="badge bg-warning text-dark">Kritik</span>
+                                {% else %}
+                                <span class="badge bg-success">Stokta</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="badge bg-danger">Stokta Yok</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Ürün bulunamadı</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+/* static/css/admin_custom.css */
+
+/* İCMAL Tablosu - YATAY GENİŞLETME */
+.field-tum_partiler_listesi {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 5px 0 !important;
+    box-sizing: border-box !important;
+}
+.field-tum_partiler_listesi > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+.field-tum_partiler_listesi table {
+    width: 100% !important;
+    min-width: 850px !important;
+    table-layout: auto !important;
+}
+.field-tum_partiler_listesi td,
+.field-tum_partiler_listesi th {
+    padding: 12px 18px !important;
+    word-wrap: normal !important;
+    white-space: nowrap !important;
+}
+.field-tum_partiler_listesi .readonly {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+}
+#content-main {
+    max-width: 100% !important;
+    padding: 0 10px !important;
+}
+.change-form .container-fluid {
+    max-width: 100% !important;
+    padding: 0 15px !important;
+}
+.form-row {
+    max-width: 100% !important;
+}
+.fieldBox {
+    max-width: 100% !important;
+}
+.field-tum_partiler_listesi thead tr {
+    background: #f8f9fa !important;
+}
+.field-tum_partiler_listesi thead th {
+    color: #495057 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+.field-tum_partiler_listesi tfoot tr,
+.field-tum_partiler_listesi .total-row {
+    background: #f8f9fa !important;
+    font-weight: bold !important;
+    border-top: 3px solid #0d6efd !important;
+}
+.field-tum_partiler_listesi .current-row {
+    background: #e7f1ff !important;
+}
+.field-tum_partiler_listesi .kalan-var {
+    color: #198754 !important;
+    font-weight: bold !important;
+}
+.field-tum_partiler_listesi .kalan-yok {
+    color: #dc3545 !important;
+    font-weight: bold !important;
+}

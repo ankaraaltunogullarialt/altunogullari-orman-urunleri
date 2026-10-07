@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Altunoğulları Orman Ürünleri Yönetim{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Özel CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261007-portal-layout">
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark site-navbar">
+        <div class="container-fluid admin-shell">
+            <div class="top-header-row">
+                <div class="navbar-brand-area">
+                    <a class="navbar-brand" href="/">
+                        <i class="fas fa-tree"></i> Altunoğulları Orman Ürünleri
+                    </a>
+                </div>
+                <div class="header-user-area">
+                    {% if user.is_authenticated %}
+                        <div class="nav-item dropdown top-profile-trigger">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdownHeader" role="button" data-bs-toggle="dropdown">
+                                <span class="profile-avatar"><i class="fas fa-user-circle"></i></span>
+                                <span class="profile-name">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if user.is_staff %}
+                                <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cog"></i> Yönetim Paneli</a></li>
+                                {% else %}
+                                <li><a class="dropdown-item" href="/portal/"><i class="fas fa-chart-pie"></i> Portal Ana Sayfa</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    {% if user.is_staff %}
+                                    <form method="post" action="/admin/logout/">
+                                    {% else %}
+                                    <form method="post" action="/portal/logout/">
+                                    {% endif %}
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="navbar-menu-area">
+                <ul class="navbar-nav me-auto navbar-menu-row">
+                    {% if not user.is_staff %}
+                    <li class="nav-item"><a class="nav-link" href="/portal/"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="portalRaporDropdown" role="button" data-bs-toggle="dropdown"><i class="fas fa-chart-pie"></i> Raporlar</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/stok/rapor/dashboard/"><i class="fas fa-tachometer-alt"></i> Rapor Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/stok/"><i class="fas fa-boxes"></i> Stok Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/fiili-stok/"><i class="fas fa-clipboard-list"></i> Fiili Stok Takip</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/stok-hareket/"><i class="fas fa-exchange-alt"></i> Stok Hareketleri</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/uretim/"><i class="fas fa-industry"></i> Üretim Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/finans/"><i class="fas fa-money-bill-wave"></i> Finans Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-genel/"><i class="fas fa-file-contract"></i> İhale Genel Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-kik-icmal/"><i class="fas fa-layer-group"></i> KİK İcmal Raporu</a></li>
+                            <li><a class="dropdown-item" href="/personel/rapor/"><i class="fas fa-users"></i> Personel Raporu</a></li>
+                            <li><a class="dropdown-item" href="/siparis/satis-raporu/"><i class="fas fa-chart-bar"></i> Satış Raporu</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/admin/"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="personelDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users"></i> Personel İşlemleri
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/personel/personel/"><i class="fas fa-user-tie"></i> Personeller</a></li>
+                            <li><a class="dropdown-item" href="/admin/personel/departman/"><i class="fas fa-building"></i> Departmanlar</a></li>
+                            <li><a class="dropdown-item" href="/admin/personel/izin/"><i class="fas fa-calendar-alt"></i> İzinler</a></li>
+                            <li><a class="dropdown-item" href="/admin/personel/vardiya/"><i class="fas fa-clock"></i> Vardiyalar</a></li>
+                            <li><a class="dropdown-item" href="/admin/personel/mesaitakip/"><i class="fas fa-hourglass-half"></i> Mesai Takipleri</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="stokDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-boxes"></i> Stok
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/stok/urun/"><i class="fas fa-cube"></i> Ürünler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/nacekodu/"><i class="fas fa-tags"></i> NACE Kodları</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/stokhareket/"><i class="fas fa-exchange-alt"></i> Stok Hareketleri</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/stokdevir/"><i class="fas fa-calendar-alt"></i> Fiili Stok Devir Girişi</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/stok/depo/"><i class="fas fa-warehouse"></i> Depolar</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/raf/"><i class="fas fa-layer-group"></i> Raflar</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/stokbarkod/"><i class="fas fa-barcode"></i> Stok Barkodları</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="tedarikDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-truck"></i> Tedarik
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/stok/tedarikci/"><i class="fas fa-building"></i> Tedarikçiler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/tedarikcitipi/"><i class="fas fa-tag"></i> Tedarikçi Tipleri</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/tasiyici/"><i class="fas fa-truck"></i> Taşıyıcılar</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/tasiyiciarac/"><i class="fas fa-truck-moving"></i> Taşıyıcı Araçları</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/tasiyiciodeme/"><i class="fas fa-money-bill-wave"></i> Taşıyıcı Ödemeleri</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/stok/ihale/"><i class="fas fa-gavel"></i> İhaleler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/ihaleparti/"><i class="fas fa-box"></i> İhale Partileri</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="uretimDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-industry"></i> Üretim
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/stok/uretimrecete/"><i class="fas fa-receipt"></i> Reçeteler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/uretim/"><i class="fas fa-cogs"></i> Üretimler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/uretimemri/"><i class="fas fa-clipboard-list"></i> Üretim Emirleri</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/uretimasama/"><i class="fas fa-step-forward"></i> Üretim Aşamaları</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/uretimasamatakip/"><i class="fas fa-tasks"></i> Aşama Takipleri</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/stok/makine/"><i class="fas fa-cog"></i> Makineler</a></li>
+                            <li><a class="dropdown-item" href="/admin/stok/fire/"><i class="fas fa-fire"></i> Fireler</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="siparisDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-shopping-cart"></i> Sipariş
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/siparis/siparis/"><i class="fas fa-cart-plus"></i> Siparişler</a></li>
+                            <li><a class="dropdown-item" href="/admin/siparis/satis/"><i class="fas fa-hand-holding-usd"></i> Satışlar</a></li>
+                            <li><a class="dropdown-item" href="/admin/siparis/satisiade/"><i class="fas fa-undo-alt"></i> Satış İadeleri</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/siparis/musteri/"><i class="fas fa-building"></i> Müşteriler</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="finansDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-money-bill-wave"></i> Finans
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin/finans/carihesap/"><i class="fas fa-users-cog"></i> Cari Hesaplar</a></li>
+                            <li><a class="dropdown-item" href="/admin/finans/carihareket/"><i class="fas fa-exchange-alt"></i> Cari Hareketler</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin/finans/banka/"><i class="fas fa-university"></i> Bankalar</a></li>
+                            <li><a class="dropdown-item" href="/admin/finans/bankahareket/"><i class="fas fa-arrow-right"></i> Banka Hareketleri</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="raporDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-pie"></i> Raporlar
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/stok/rapor/dashboard/"><i class="fas fa-tachometer-alt"></i> Rapor Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/stok/"><i class="fas fa-boxes"></i> Stok Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/fiili-stok/"><i class="fas fa-clipboard-list"></i> Fiili Stok Takip Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/stok-hareket/"><i class="fas fa-exchange-alt"></i> Stok Hareketleri</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/uretim/"><i class="fas fa-industry"></i> Üretim Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/finans/"><i class="fas fa-money-bill-wave"></i> Finans Raporu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-genel/"><i class="fas fa-file-contract"></i> İhale Genel Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-kik-icmal/"><i class="fas fa-layer-group"></i> KİK İcmal Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-boy-analiz/"><i class="fas fa-ruler"></i> Boy Analiz Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/tasiyici/"><i class="fas fa-truck"></i> Taşıyıcı Raporu</a></li>
+                            <li><a class="dropdown-item" href="/stok/rapor/ihale-urun-analiz/"><i class="fas fa-tree"></i> Ürün Analiz Raporu</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/personel/rapor/"><i class="fas fa-users"></i> Personel Raporu</a></li>
+                            <li><a class="dropdown-item" href="/siparis/satis-raporu/"><i class="fas fa-chart-bar"></i> Satış Raporu</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="yedekDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-database"></i> Yedekleme
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/stok/yedekleme/"><i class="fas fa-database"></i> Veritabanı Yedekleme</a></li>
+                            <li><a class="dropdown-item" href="/stok/yedekleme/olustur/"><i class="fas fa-plus-circle"></i> Hızlı Yedek Al</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <header class="public-site-header">
+        <div class="public-topbar">
+            <div class="public-brand-panel">
+                <div class="public-brand-wrap">
+                    <img src="https://www.altunogullari.com/wp-content/uploads/2022/03/AltunogullariLogo.svg" alt="Altunoğulları Orman Ürünleri" class="public-brand-logo" />
+                </div>
+                <div class="public-phone-wrap">
+                    <i class="fas fa-phone"></i>
+                    <span>+90 (312) 514 29 29</span>
+                </div>
+            </div>
+        </div>
+        <div class="public-nav-wrap">
+            <nav class="public-main-nav">
+                <a href="/">Anasayfa</a>
+                <a href="/hakkimizda/">Hakkımızda</a>
+                <a href="/urunlerimiz/">Ürünlerimiz</a>
+                <a href="/hizmetlerimiz/">Hizmetlerimiz</a>
+                <a href="/referanslarimiz/">Referanslarımız</a>
+                <a href="/bize-ulasin/">Bize Ulaşın</a>
+            </nav>
+            <div class="public-login-dropdown dropdown">
+                <button class="btn public-login-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Giriş
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/admin/login/"><i class="fas fa-user-shield"></i> Admin Girişi</a></li>
+                    <li><a class="dropdown-item" href="/portal/login/"><i class="fas fa-chart-line"></i> Portal Girişi</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <div class="container mt-4">
+    {% endif %}
+        {% block content %}{% endblock %}
+    {% if user.is_authenticated %}
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

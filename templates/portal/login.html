@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Girişi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --altuno-bg: #edf1f4;
+            --altuno-blue: #0e6db8;
+            --altuno-blue-dark: #0b5a97;
+            --altuno-gold: #d7b177;
+            --altuno-ink: #1b2a2d;
+            --altuno-muted: #6d7a7e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--altuno-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 48px 20px 24px;
+            margin: 0;
+        }
+
+        .login-shell {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .login-card {
+            width: 100%;
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(13, 33, 45, 0.12);
+            background: #f5f8fa;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #1b78c6 0%, #0f5fa6 100%);
+            color: white;
+            padding: 28px 24px 22px;
+            text-align: center;
+        }
+
+        .login-header h3 {
+            margin: 0;
+            font-size: clamp(2rem, 3vw, 2.4rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .login-header small {
+            display: block;
+            margin-top: 8px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .login-body {
+            padding: 24px 28px 12px;
+            background: rgba(255,255,255,0.7);
+        }
+
+        .form-label {
+            font-size: 0.95rem;
+            color: var(--altuno-ink);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .form-control {
+            background: #e9f0f6;
+            border: 1px solid rgba(17, 32, 39, 0.08);
+            border-radius: 12px;
+            min-height: 52px;
+            font-size: 1.05rem;
+            color: var(--altuno-ink);
+            padding: 12px 14px;
+        }
+
+        .form-control:focus {
+            border-color: rgba(11, 92, 161, 0.45);
+            box-shadow: 0 0 0 0.2rem rgba(11, 92, 161, 0.15);
+            background: #edf4fa;
+        }
+
+        .btn-primary {
+            width: 100%;
+            min-height: 54px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #1b78c6 0%, #0f5fa6 100%);
+            font-weight: 700;
+            font-size: 1.08rem;
+            margin-top: 8px;
+            box-shadow: 0 12px 24px rgba(15, 95, 166, 0.18);
+        }
+
+        .login-alt-link {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #0f5fa6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-alt-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 576px) {
+            .login-body { padding: 20px 18px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-shell">
+        <div class="card login-card">
+            <div class="login-header">
+                <h3><i class="fas fa-chart-line"></i> Portal Girişi</h3>
+                <small>Sadece rapor erişimi için giriş yapın</small>
+            </div>
+            <div class="login-body">
+                {% if form.errors %}
+                    <div class="alert alert-danger">Kullanıcı adı veya şifre hatalı.</div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Kullanıcı Adı</label>
+                        <input type="text" name="username" class="form-control" id="id_username" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Şifre</label>
+                        <input type="password" name="password" class="form-control" id="id_password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Giriş Yap</button>
+                </form>
+
+                <a href="/admin/login/" class="login-alt-link">Admin girişi için tıklayın</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+</body>
+</html>

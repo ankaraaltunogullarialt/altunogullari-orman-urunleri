@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Django
+*.log
+*.pot
+*.pyc
+*.sqlite3
+*.db
+*.db3
+.env
+.env.*
+venv/
+.venv/
+.env.local
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build/static/cache
+staticfiles/
+media/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local backups
+backup/
+yedekler/local/
+
+# Node
+node_modules/

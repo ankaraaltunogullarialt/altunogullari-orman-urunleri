@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Altunoğulları Orman Ürünleri{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="display-5"><i class="fas fa-tachometer-alt text-success"></i> Hoş Geldiniz, {{ user.first_name|default:user.username }}</h1>
+        <p class="lead">Altunoğulları Orman Ürünleri Yönetim Sistemine hoş geldiniz. Güncel veriler aşağıdadır.</p>
+        <hr>
+    </div>
+</div>
+
+<!-- ===== KARTLAR ===== -->
+<div class="row mt-4">
+    <!-- TOPLAM MİKTAR (3 METRİKLİ) -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <!-- 1. TÜM İHALELER -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="card-title mb-0">Toplam Miktar</h6>
+                        <small style="opacity: 0.85;">Tüm ihaleler</small>
+                        <h3 class="card-text mb-0">{{ toplam_miktar|floatformat:4|default:"0.00" }} m³</h3>
+                    </div>
+                    <i class="fas fa-cubes fa-2x"></i>
+                </div>
+
+                <hr style="border-color: rgba(255,255,255,0.3); margin: 6px 0;">
+
+                <!-- 2. DEVAM EDEN PARTİLER -->
+                <div class="mb-1">
+                    <small style="opacity: 0.85;">
+                        <i class="fas fa-hourglass-half"></i> Devam Eden Partiler:
+                    </small>
+                    <div style="font-size: 15px; font-weight: 700;">
+                        {{ devam_eden_miktar|floatformat:4|default:"0.00" }} m³
+                    </div>
+                </div>
+
+                <!-- 3. DEVAM EDEN İHALELER (KİK BAZLI) -->
+                <div>
+                    <small style="opacity: 0.85;">
+                        <i class="fas fa-layer-group"></i> Devam Eden İhaleler:
+                    </small>
+                    <div style="font-size: 15px; font-weight: 700; color: #ffc107;">
+                        {{ devam_eden_kik_miktar|floatformat:4|default:"0.00" }} m³
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOPLAM KALAN -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h6 class="card-title mb-0">Toplam Kalan</h6>
+                        <small style="opacity: 0.85;">Tüm ihaleler</small>
+                        <h3 class="card-text mb-0">{{ toplam_kalan|floatformat:4|default:"0.00" }} m³</h3>
+                    </div>
+                    <i class="fas fa-hourglass-half fa-2x"></i>
+                </div>
+                <hr style="border-color: rgba(255,255,255,0.3); margin: 6px 0;">
+                <div>
+                    <small style="opacity: 0.9;">
+                        <i class="fas fa-spinner"></i> Devam Eden Partiler:
+                        <div style="font-size: 15px; font-weight: 700;">
+                            {{ devam_eden_kalan|floatformat:4|default:"0.00" }} m³
+                        </div>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AKTİF İHALE SAYISI -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Aktif İhale</h6>
+                        <h2 class="card-text">{{ aktif_ihale_sayisi|default:0 }}</h2>
+                    </div>
+                    <i class="fas fa-gavel fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KRİTİK İHALE STOĞU -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card text-white bg-danger h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Kritik İhale Stoğu</h6>
+                        <h2 class="card-text">{{ kritik_ihale_stok|default:0 }}</h2>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ORTA BLOK: HAREKET + AKTİF İHALELER ===== -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-clock"></i> Son 7 Gün Stok Hareketleri
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Ürün</th>
+                                <th>Tip</th>
+                                <th>Miktar</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hareket in son_hareketler %}
+                            <tr>
+                                <td>{{ hareket.urun.urun_adi|truncatechars:20|default:"-" }}</td>
+                                <td><span class="badge bg-secondary">{{ hareket.get_hareket_tipi_display|default:"-" }}</span></td>
+                                <td>{{ hareket.miktar|floatformat:4|default:"0.00" }} m³</td>
+                                <td>{{ hareket.tarih|date:"d.m H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center">Henüz hareket yok</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100 active-ihale-card">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-gavel"></i> Aktif İhaleler
+            </div>
+            <div class="card-body active-ihale-card-body">
+                <div class="dashboard-scroll-table active-ihale-table">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>KİK No</th>
+                                    <th>Tedarikçi</th>
+                                    <th>Parti No</th>
+                                    <th>Miktar (m³)</th>
+                                    <th>Kalan (m³)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ihale in aktif_ihaleler %}
+                                <tr>
+                                    <td><strong>{{ ihale.kik_no|default:"-" }}</strong></td>
+                                    <td>{{ ihale.tedarikci.unvan|default:"-"|truncatechars:15 }}</td>
+                                    <td>{{ ihale.parti_no|default:"-" }}</td>
+                                    <td class="text-end">{{ ihale.toplam_ihale_miktari|floatformat:4|default:"0.0000" }}</td>
+                                    <td class="text-end {% if ihale.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ ihale.kalan_miktar|floatformat:4|default:"0.0000" }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Aktif ihale bulunmamaktadır.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="text-center mt-2 active-ihale-summary">
+                    <small>Toplam Miktar: <strong>{{ toplam_ihale_miktar|floatformat:4|default:"0.0000" }}</strong> m³</small>
+                    <br>
+                    <small>Toplam Kalan: <strong>{{ toplam_kalan_miktar|floatformat:4|default:"0.0000" }}</strong> m³</small>
+                    <br>
+                    <small>Aktif İhale Sayısı: <strong>{{ aktif_ihaleler|length|default:0 }}</strong></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ALT BLOK: FİNANS ===== -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-money-bill-wave"></i> Finansal Durum
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h6>Alacak</h6>
+                        <h4 class="text-success">{{ toplam_alacak|floatformat:4|default:"0.00" }} TL</h4>
+                    </div>
+                    <div class="col-4">
+                        <h6>Borç</h6>
+                        <h4 class="text-danger">{{ toplam_borc|floatformat:4|default:"0.00" }} TL</h4>
+                    </div>
+                    <div class="col-4">
+                        <h6>Net</h6>
+                        <h4 class="{% if net_bakiye >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ net_bakiye|floatformat:4|default:"0.00" }} TL
+                        </h4>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <a href="/admin/finans/" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-arrow-right"></i> Finans Detayları
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ===== SİPARİŞ GRAFİĞİ (Bar Chart) =====
+        const siparisCtx = document.getElementById('siparisChart').getContext('2d');
+        new Chart(siparisCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ son_6_ay|safe }},
+                datasets: [{
+                    label: 'Sipariş Sayısı',
+                    data: {{ siparis_verileri|safe }},
+                    backgroundColor: ['#28a745', '#20c997', '#17a2b8', '#007bff', '#6f42c1', '#e83e8c'],
+                    borderColor: '#343a40',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+
+        // ===== ÜRÜN TİPİ DAĞILIMI (Pie Chart) =====
+        const tipCtx = document.getElementById('tipChart').getContext('2d');
+        const tipLabels = [];
+        const tipData = [];
+        const tipColors = ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
+
+        {% for tip in tip_dagilimi %}
+            tipLabels.push('{{ tip.urun_tipi }}');
+            tipData.push({{ tip.adet }});
+        {% endfor %}
+
+        new Chart(tipCtx, {
+            type: 'pie',
+            data: {
+                labels: tipLabels,
+                datasets: [{
+                    data: tipData,
+                    backgroundColor: tipColors.slice(0, tipData.length),
+                    borderColor: '#343a40',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
