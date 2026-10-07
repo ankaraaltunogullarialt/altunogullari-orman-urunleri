@@ -42,3 +42,10 @@ yedekler/local/
 
 # Node
 node_modules/
+
+yedekler/
+project_backups/
+www.altunogullari.com
+logs/
+*.sqlite3
+.sqlite3.
