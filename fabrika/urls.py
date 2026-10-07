@@ -14,7 +14,8 @@ from personel.models import Personel
 from siparis.models import Siparis, Musteri
 from finans.models import CariHesap, Banka
 
-ensure_default_groups()
+# Veritabanı hazır olduktan sonra istek akışında rol grupları oluşturulur.
+# Aksi halde Render gibi ortamda startup sırasında auth_group tablosu bulunmayabilir.
 
 
 def dashboard(request):

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from django.db import connection
 
 GROUP_NAME_ADMIN = 'Yönetici'
 GROUP_NAME_PORTAL = 'Portal Kullanıcısı'
@@ -16,7 +17,20 @@ DEFAULT_ROLE_GROUPS = {
 
 
 def ensure_default_groups():
-    """Varsayılan Türkçe rol gruplarını garanti eder."""
+    """Varsayılan Türkçe rol gruplarını garanti eder.
+
+    Render veya yeni ortamda veritabanı henüz hazır değilse uygulama başlatılırken
+    auth_group tablosu bulunamayabilir. Bu durumda güvenli şekilde atlanır;
+    migrate sonrasında sonraki isteklerde veya manuel çağrıda oluşturulur.
+    """
+    try:
+        tables = connection.introspection.table_names()
+    except Exception:
+        return
+
+    if 'auth_group' not in tables:
+        return
+
     for group_name in DEFAULT_ROLE_GROUPS.values():
         Group.objects.get_or_create(name=group_name)
 
