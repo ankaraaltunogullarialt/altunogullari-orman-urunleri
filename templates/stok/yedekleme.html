@@ -62,6 +62,37 @@
                         <i class="fas fa-broom"></i> Eski Yedekleri Temizle
                     </a>
                 </div>
+                <!-- DOSYADAN YÜKLEME -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-upload"></i> Bilgisayardan Yedek Yükle
+                    </div>
+                    <div class="card-body">
+                        <form method="post" 
+                            action="{% url 'stok:yedek_dosyadan_yukle' %}" 
+                            enctype="multipart/form-data"
+                            onsubmit="return confirm('DİKKAT! Mevcut veritabanı bu dosya ile DEĞİŞTİRİLECEK. Devam edilsin mi?')">
+                            {% csrf_token %}
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-9">
+                                    <input type="file" 
+                                        name="yedek_dosyasi" 
+                                        class="form-control" 
+                                        accept=".json"
+                                        required>
+                                    <small class="text-muted">
+                                        Sadece <code>.json</code> uzantılı yedek dosyaları yüklenebilir.
+                                    </small>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-warning w-100">
+                                        <i class="fas fa-upload"></i> Yükle ve Geri Yükle
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="col-md-3">
                     <a href="/admin/" class="btn btn-secondary w-100">
                         <i class="fas fa-cog"></i> Admin Panel
@@ -102,14 +133,27 @@
                             <td class="text-end">{{ y.boyut_mb }} MB</td>
                             <td class="text-center">
                                 <a href="{% url 'stok:yedek_indir' y.ad %}" 
-                                   class="btn btn-sm btn-primary" title="İndir">
+                                class="btn btn-sm btn-primary" title="İndir">
                                     <i class="fas fa-download"></i>
                                 </a>
                                 
+                                {% if y.ad|slice:"-5:" == ".json" %}
+                                <form method="post" 
+                                    action="{% url 'stok:yedek_yukle' %}" 
+                                    style="display:inline-block"
+                                    onsubmit="return confirm('DİKKAT! Mevcut veritabanı bu yedekle DEĞİŞTİRİLECEK. Devam edilsin mi?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="yedek_adi" value="{{ y.ad }}">
+                                    <button type="submit" class="btn btn-sm btn-warning" title="Geri Yükle">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
                                 <a href="{% url 'stok:yedek_sil' y.ad %}" 
-                                   class="btn btn-sm btn-danger" 
-                                   title="Sil"
-                                   onclick="return confirm('{{ y.ad }} silinsin mi?')">
+                                class="btn btn-sm btn-danger" 
+                                title="Sil"
+                                onclick="return confirm('{{ y.ad }} silinsin mi?')">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </td>

@@ -27,9 +27,12 @@ urlpatterns = [
     # ===== VERİTABANI YEDEKLEME =====
     path('yedekleme/', views.yedekleme_sayfasi, name='yedekleme_sayfasi'),
     path('yedekleme/olustur/', views.yedek_olustur, name='yedek_olustur'),
+    path('yedekleme/yukle/', views.yedek_yukle, name='yedek_yukle'),
     path('yedekleme/indir/<str:yedek_adi>/', views.yedek_indir, name='yedek_indir'),
     path('yedekleme/sil/<str:yedek_adi>/', views.yedek_sil, name='yedek_sil'),
     path('yedekleme/temizle/', views.yedek_temizle, name='yedek_temizle'),
+    path('yedekleme/dosyadan-yukle/', views.yedek_dosyadan_yukle, name='yedek_dosyadan_yukle'),
+    
     
     # JSON verileri
     path('grafik/verileri/', views.grafik_verileri, name='grafik_verileri'),

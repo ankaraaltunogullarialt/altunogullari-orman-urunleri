@@ -1976,6 +1976,120 @@ def yedek_temizle(request):
 
     return redirect('stok:yedekleme_sayfasi')
 
+def yedek_dosyadan_yukle(request):
+    """Bilgisayardan yüklenen JSON dosyasını veritabanına aktar"""
+    if request.method != 'POST':
+        return redirect('stok:yedekleme_sayfasi')
+
+    yuklenen_dosya = request.FILES.get('yedek_dosyasi')
+
+    if not yuklenen_dosya:
+        messages.error(request, '❌ Dosya seçilmedi!')
+        return redirect('stok:yedekleme_sayfasi')
+
+    if not yuklenen_dosya.name.endswith('.json'):
+        messages.error(request, '❌ Sadece JSON dosyaları yüklenebilir!')
+        return redirect('stok:yedekleme_sayfasi')
+
+    try:
+        # Yüklenen dosyayı geçici olarak kaydet
+        tarih_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        gecici_ad = f'yuklenen_{tarih_str}.json'
+        gecici_yol = os.path.join(YEDEK_KLASORU, gecici_ad)
+
+        with open(gecici_yol, 'wb+') as f:
+            for chunk in yuklenen_dosya.chunks():
+                f.write(chunk)
+
+        # Yüklemeden önce otomatik yedek al
+        otomatik_yedek_ad = f'otomatik_dosya_yukleme_oncesi_{tarih_str}.json'
+        otomatik_yedek_yolu = os.path.join(YEDEK_KLASORU, otomatik_yedek_ad)
+
+        buffer = io.StringIO()
+        call_command(
+            'dumpdata',
+            '--natural-foreign',
+            '--natural-primary',
+            '--exclude=contenttypes',
+            '--exclude=auth.permission',
+            '--indent', '2',
+            stdout=buffer,
+        )
+        with open(otomatik_yedek_yolu, 'w', encoding='utf-8') as f:
+            f.write(buffer.getvalue())
+
+        # loaddata ile yükle
+        call_command('loaddata', gecici_yol, verbosity=0)
+
+        messages.success(
+            request,
+            f'✅ Dosya başarıyla yüklendi: {yuklenen_dosya.name} | '
+            f'ℹ️ Önceki durum yedeklendi: {otomatik_yedek_ad}'
+        )
+    except Exception as e:
+        messages.error(request, f'❌ Yükleme hatası: {str(e)}')
+
+    return redirect('stok:yedekleme_sayfasi')
+
+def yedek_yukle(request):
+    """JSON yedeğinden geri yükle (dikkatli kullanın)"""
+    if request.method != 'POST':
+        return redirect('stok:yedekleme_sayfasi')
+
+    yedek_adi = request.POST.get('yedek_adi', '').strip()
+
+    if not yedek_adi:
+        messages.error(request, '❌ Yedek seçilmedi!')
+        return redirect('stok:yedekleme_sayfasi')
+
+    # Güvenlik
+    if '..' in yedek_adi or '/' in yedek_adi or '\\' in yedek_adi:
+        messages.error(request, '❌ Geçersiz dosya adı!')
+        return redirect('stok:yedekleme_sayfasi')
+
+    yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_adi)
+
+    if not os.path.exists(yedek_yolu):
+        messages.error(request, f'❌ Yedek bulunamadı: {yedek_adi}')
+        return redirect('stok:yedekleme_sayfasi')
+
+    # Sadece JSON yedeklerini kabul et (PostgreSQL uyumlu)
+    if not yedek_adi.endswith('.json'):
+        messages.error(request, '❌ Sadece JSON yedekleri geri yüklenebilir!')
+        return redirect('stok:yedekleme_sayfasi')
+
+    try:
+        # Yüklemeden önce otomatik yedek al
+        tarih_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        otomatik_yedek_ad = f'otomatik_geri_yukleme_oncesi_{tarih_str}.json'
+        otomatik_yedek_yolu = os.path.join(YEDEK_KLASORU, otomatik_yedek_ad)
+
+        buffer = io.StringIO()
+        call_command(
+            'dumpdata',
+            '--natural-foreign',
+            '--natural-primary',
+            '--exclude=contenttypes',
+            '--exclude=auth.permission',
+            '--indent', '2',
+            stdout=buffer,
+        )
+        with open(otomatik_yedek_yolu, 'w', encoding='utf-8') as f:
+            f.write(buffer.getvalue())
+
+        # loaddata ile geri yükle
+        call_command('loaddata', yedek_yolu, verbosity=0)
+
+        messages.success(
+            request,
+            f'✅ Geri yükleme başarılı: {yedek_adi} | '
+            f'ℹ️ Önceki durum yedeklendi: {otomatik_yedek_ad}'
+        )
+    except Exception as e:
+        messages.error(request, f'❌ Geri yükleme hatası: {str(e)}')
+
+    return redirect('stok:yedekleme_sayfasi')
+
 # ==================== ÜRÜN ANALİZ RAPORU ====================
 def ihale_urun_analiz_raporu(request):
     """
