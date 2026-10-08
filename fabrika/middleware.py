@@ -1,3 +1,4 @@
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 
 from fabrika.roles import is_portal_user
@@ -33,7 +34,7 @@ def portal_access_middleware(get_response):
                 return get_response(request)
 
             if not is_portal_user(request.user):
-                return redirect(f'/portal/login/?next={request.get_full_path()}')
+                return HttpResponseForbidden('Bu rapora erişim izniniz yok.')
 
         return get_response(request)
 

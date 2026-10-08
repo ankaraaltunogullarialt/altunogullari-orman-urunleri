@@ -11,6 +11,15 @@ from fabrika.roles import (
 
 
 class PortalLoginRedirectTests(TestCase):
+    def test_authenticated_non_portal_user_is_forbidden_from_reports(self):
+        user = User.objects.create_user(username='regularuser', password='secret123')
+        client = Client()
+        client.force_login(user)
+
+        response = client.get('/stok/rapor/dashboard/')
+
+        self.assertEqual(response.status_code, 403)
+
     def test_portal_user_redirects_to_dashboard_after_login(self):
         portal_group, _ = Group.objects.get_or_create(name=GROUP_NAME_PORTAL)
         user = User.objects.create_user(username='portaluser', password='secret123')
