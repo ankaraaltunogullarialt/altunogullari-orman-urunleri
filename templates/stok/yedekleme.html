@@ -105,16 +105,7 @@
                                    class="btn btn-sm btn-primary" title="İndir">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                <form method="post" 
-                                      action="{% url 'stok:yedek_yukle' %}" 
-                                      style="display:inline-block"
-                                      onsubmit="return confirm('DİKKAT! Mevcut veritabanı bu yedekle DEĞİŞTİRİLECEK. Devam edilsin mi?')">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="yedek_adi" value="{{ y.ad }}">
-                                    <button type="submit" class="btn btn-sm btn-warning" title="Geri Yükle">
-                                        <i class="fas fa-undo"></i>
-                                    </button>
-                                </form>
+                                
                                 <a href="{% url 'stok:yedek_sil' y.ad %}" 
                                    class="btn btn-sm btn-danger" 
                                    title="Sil"

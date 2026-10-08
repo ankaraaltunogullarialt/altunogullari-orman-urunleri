@@ -1790,12 +1790,15 @@ def _tasiyici_excel(sevkler, tasiyici_listesi, toplamlar):
 
 # ==================== VERİTABANI YEDEKLEME ====================
 import os
+import io
+import json
 import shutil
 from datetime import datetime
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
+from django.core.management import call_command
 
 
 # Yedek klasörü
@@ -1808,15 +1811,24 @@ def _yedek_klasoru_olustur():
         os.makedirs(YEDEK_KLASORU)
 
 
+def _veritabani_turu():
+    """Aktif veritabanı türünü döndürür: 'sqlite' veya 'postgresql'"""
+    engine = settings.DATABASES['default']['ENGINE']
+    if 'sqlite' in engine:
+        return 'sqlite'
+    elif 'postgresql' in engine:
+        return 'postgresql'
+    return 'unknown'
+
+
 def yedekleme_sayfasi(request):
     """Veritabanı yedekleme sayfası"""
     _yedek_klasoru_olustur()
-    
-    # Mevcut yedekleri listele
+
     yedekler = []
     if os.path.exists(YEDEK_KLASORU):
         for dosya in os.listdir(YEDEK_KLASORU):
-            if dosya.endswith('.sqlite3') or dosya.endswith('.zip') or dosya.endswith('.sql'):
+            if dosya.endswith(('.sqlite3', '.zip', '.sql', '.json')):
                 dosya_yolu = os.path.join(YEDEK_KLASORU, dosya)
                 if os.path.isfile(dosya_yolu):
                     boyut = os.path.getsize(dosya_yolu)
@@ -1827,65 +1839,94 @@ def yedekleme_sayfasi(request):
                         'boyut_mb': round(boyut / (1024 * 1024), 2),
                         'tarih': tarih,
                     })
-    
-    # Tarihe göre sırala (en yeni en üstte)
+
     yedekler.sort(key=lambda x: x['tarih'], reverse=True)
-    
-    # Veritabanı bilgileri
-    db_yolu = settings.DATABASES['default']['NAME']
-    db_boyut = os.path.getsize(db_yolu) if os.path.exists(db_yolu) else 0
-    
+
+    # Veritabanı bilgisi
+    db_turu = _veritabani_turu()
+    if db_turu == 'sqlite':
+        db_yolu = settings.DATABASES['default']['NAME']
+        db_boyut = os.path.getsize(db_yolu) if os.path.exists(str(db_yolu)) else 0
+        db_bilgi = f"SQLite ({db_boyut / 1024:.1f} KB)"
+    else:
+        # Neon PostgreSQL — boyutu sorgula
+        try:
+            from django.db import connection
+            with connection.cursor() as cur:
+                cur.execute("SELECT pg_database_size(current_database())")
+                db_boyut = cur.fetchone()[0]
+            db_bilgi = f"PostgreSQL / Neon ({db_boyut / (1024 * 1024):.2f} MB)"
+        except Exception:
+            db_bilgi = "PostgreSQL / Neon"
+            db_boyut = 0
+
     context = {
         'yedekler': yedekler,
+        'db_bilgi': db_bilgi,
         'db_boyut_mb': round(db_boyut / (1024 * 1024), 2),
         'yedek_sayisi': len(yedekler),
         'toplam_yedek_boyut': round(sum(y['boyut'] for y in yedekler) / (1024 * 1024), 2),
+        'db_turu': db_turu,
     }
     return render(request, 'stok/yedekleme.html', context)
 
 
 def yedek_olustur(request):
-    """Yeni yedek oluştur"""
-    from django.contrib import messages
-    from django.shortcuts import redirect
-    
+    """Yeni yedek oluştur — SQLite ise kopyala, PostgreSQL ise dumpdata ile JSON al"""
     _yedek_klasoru_olustur()
-    
+
     try:
-        db_yolu = settings.DATABASES['default']['NAME']
-        
-        if not os.path.exists(db_yolu):
-            messages.error(request, '❌ Veritabanı dosyası bulunamadı!')
-            return redirect('stok:yedekleme_sayfasi')
-        
-        # Yedek dosya adı
         tarih_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-        yedek_ad = f'db_yedek_{tarih_str}.sqlite3'
-        yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_ad)
-        
-        # Kopyala
-        shutil.copy2(db_yolu, yedek_yolu)
-        
+        db_turu = _veritabani_turu()
+
+        if db_turu == 'sqlite':
+            # === SQLite: dosya kopyala ===
+            db_yolu = str(settings.DATABASES['default']['NAME'])
+            if not os.path.exists(db_yolu):
+                messages.error(request, '❌ Veritabanı dosyası bulunamadı!')
+                return redirect('stok:yedekleme_sayfasi')
+
+            yedek_ad = f'db_yedek_{tarih_str}.sqlite3'
+            yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_ad)
+            shutil.copy2(db_yolu, yedek_yolu)
+
+        else:
+            # === PostgreSQL / Neon: dumpdata ile JSON al ===
+            yedek_ad = f'db_yedek_{tarih_str}.json'
+            yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_ad)
+
+            buffer = io.StringIO()
+            call_command(
+                'dumpdata',
+                '--natural-foreign',
+                '--natural-primary',
+                '--exclude=contenttypes',
+                '--exclude=auth.permission',
+                '--indent', '2',
+                stdout=buffer,
+            )
+            with open(yedek_yolu, 'w', encoding='utf-8') as f:
+                f.write(buffer.getvalue())
+
         boyut_mb = round(os.path.getsize(yedek_yolu) / (1024 * 1024), 2)
-        
         messages.success(request, f'✅ Yedek oluşturuldu: {yedek_ad} ({boyut_mb} MB)')
+
     except Exception as e:
         messages.error(request, f'❌ Yedek oluşturma hatası: {str(e)}')
-    
+
     return redirect('stok:yedekleme_sayfasi')
 
 
 def yedek_indir(request, yedek_adi):
     """Yedek dosyasını indir"""
-    # Güvenlik: dosya adında ../ veya / olmasın
     if '..' in yedek_adi or '/' in yedek_adi or '\\' in yedek_adi:
         raise Http404("Geçersiz dosya adı")
-    
+
     yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_adi)
-    
+
     if not os.path.exists(yedek_yolu):
         raise Http404("Yedek bulunamadı")
-    
+
     response = FileResponse(open(yedek_yolu, 'rb'), as_attachment=True)
     response['Content-Disposition'] = f'attachment; filename="{yedek_adi}"'
     return response
@@ -1893,16 +1934,12 @@ def yedek_indir(request, yedek_adi):
 
 def yedek_sil(request, yedek_adi):
     """Yedek dosyasını sil"""
-    from django.contrib import messages
-    from django.shortcuts import redirect
-    
-    # Güvenlik
     if '..' in yedek_adi or '/' in yedek_adi or '\\' in yedek_adi:
         messages.error(request, '❌ Geçersiz dosya adı!')
         return redirect('stok:yedekleme_sayfasi')
-    
+
     yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_adi)
-    
+
     try:
         if os.path.exists(yedek_yolu):
             os.remove(yedek_yolu)
@@ -1911,84 +1948,32 @@ def yedek_sil(request, yedek_adi):
             messages.warning(request, f'⚠️ Dosya bulunamadı: {yedek_adi}')
     except Exception as e:
         messages.error(request, f'❌ Silme hatası: {str(e)}')
-    
-    return redirect('stok:yedekleme_sayfasi')
 
-
-def yedek_yukle(request):
-    """Yedek dosyasından geri yükle (DİKKATLİ KULLANIN)"""
-    from django.contrib import messages
-    from django.shortcuts import redirect
-    
-    if request.method != 'POST':
-        return redirect('stok:yedekleme_sayfasi')
-    
-    yedek_adi = request.POST.get('yedek_adi', '').strip()
-    
-    if not yedek_adi:
-        messages.error(request, '❌ Yedek seçilmedi!')
-        return redirect('stok:yedekleme_sayfasi')
-    
-    # Güvenlik
-    if '..' in yedek_adi or '/' in yedek_adi or '\\' in yedek_adi:
-        messages.error(request, '❌ Geçersiz dosya adı!')
-        return redirect('stok:yedekleme_sayfasi')
-    
-    yedek_yolu = os.path.join(YEDEK_KLASORU, yedek_adi)
-    
-    if not os.path.exists(yedek_yolu):
-        messages.error(request, f'❌ Yedek bulunamadı: {yedek_adi}')
-        return redirect('stok:yedekleme_sayfasi')
-    
-    try:
-        db_yolu = settings.DATABASES['default']['NAME']
-        
-        # Önce mevcut db'yi otomatik yedekle
-        tarih_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-        otomatik_yedek = f'otomatik_geri_yukleme_oncesi_{tarih_str}.sqlite3'
-        otomatik_yolu = os.path.join(YEDEK_KLASORU, otomatik_yedek)
-        shutil.copy2(db_yolu, otomatik_yolu)
-        
-        # Geri yükle
-        shutil.copy2(yedek_yolu, db_yolu)
-        
-        messages.success(
-            request,
-            f'✅ Geri yükleme başarılı! Eski veritabanı yedeklendi: {otomatik_yedek}'
-        )
-    except Exception as e:
-        messages.error(request, f'❌ Geri yükleme hatası: {str(e)}')
-    
     return redirect('stok:yedekleme_sayfasi')
 
 
 def yedek_temizle(request):
     """Tüm eski yedekleri temizle (son 5 hariç)"""
-    from django.contrib import messages
-    from django.shortcuts import redirect
-    
     _yedek_klasoru_olustur()
-    
+
     try:
         yedekler = []
         for dosya in os.listdir(YEDEK_KLASORU):
-            if dosya.endswith('.sqlite3'):
+            if dosya.endswith(('.sqlite3', '.json')):
                 yol = os.path.join(YEDEK_KLASORU, dosya)
                 yedekler.append((yol, os.path.getmtime(yol)))
-        
-        # Tarihe göre sırala (en yeni en üstte)
+
         yedekler.sort(key=lambda x: x[1], reverse=True)
-        
-        # İlk 5'i tut, gerisini sil
+
         silinen = 0
         for yol, _ in yedekler[5:]:
             os.remove(yol)
             silinen += 1
-        
+
         messages.success(request, f'✅ {silinen} eski yedek silindi')
     except Exception as e:
         messages.error(request, f'❌ Temizleme hatası: {str(e)}')
-    
+
     return redirect('stok:yedekleme_sayfasi')
 
 # ==================== ÜRÜN ANALİZ RAPORU ====================
