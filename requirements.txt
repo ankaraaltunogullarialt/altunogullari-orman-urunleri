@@ -1,7 +1,7 @@
 asgiref==3.12.1
 defusedxml==0.7.1
 diff-match-patch==20241021
-Django==4.2.7
+Django==5.2.6
 django-cors-headers==4.3.0
 django-import-export==3.3.0
 django-jazzmin==2.6.0
