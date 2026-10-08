@@ -29,7 +29,6 @@ urlpatterns = [
     path('yedekleme/olustur/', views.yedek_olustur, name='yedek_olustur'),
     path('yedekleme/indir/<str:yedek_adi>/', views.yedek_indir, name='yedek_indir'),
     path('yedekleme/sil/<str:yedek_adi>/', views.yedek_sil, name='yedek_sil'),
-    path('yedekleme/yukle/', views.yedek_yukle, name='yedek_yukle'),
     path('yedekleme/temizle/', views.yedek_temizle, name='yedek_temizle'),
     
     # JSON verileri
