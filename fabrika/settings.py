@@ -121,17 +121,28 @@ else:
     #        'NAME': BASE_DIR / 'db.sqlite3',
     #    }
     #}
-    import dj_database_url
     import os
+    import dj_database_url
 
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"),
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True,
-        )
-    }
+    DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
+
+    if DATABASE_URL.startswith("postgres"):
+        DATABASES = {
+            "default": dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+                ssl_require=True,
+            )
+        }
+    else:
+        DATABASES = {
+            "default": dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
