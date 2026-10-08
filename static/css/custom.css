@@ -1163,3 +1163,29 @@ body {
         align-items: flex-start;
     }
 }
+/* Navbar'ı her temada görünür yap: koyu arka plan + beyaz yazı */
+html[data-bs-theme="light"] .app-header.navbar,
+html[data-bs-theme="light"] #jazzy-navbar {
+    background-color: #2c3e50 !important;
+    background-image: none !important;
+}
+
+html[data-bs-theme="light"] .app-header.navbar .nav-link,
+html[data-bs-theme="light"] .app-header.navbar .navbar-brand,
+html[data-bs-theme="light"] .app-header.navbar .nav-link i,
+html[data-bs-theme="light"] .app-header.navbar .dropdown-toggle {
+    color: #ffffff !important;
+}
+
+/* Sidebar zaten koyu, ama garanti olsun */
+html[data-bs-theme="light"] .app-sidebar,
+html[data-bs-theme="light"] #jazzy-sidebar {
+    background-color: #2c3e50 !important;
+    background-image: none !important;
+}
+
+html[data-bs-theme="light"] .app-sidebar .nav-link,
+html[data-bs-theme="light"] .app-sidebar .nav-link i,
+html[data-bs-theme="light"] .app-sidebar .nav-header {
+    color: #ffffff !important;
+}

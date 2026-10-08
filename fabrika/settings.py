@@ -172,6 +172,7 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Hoş Geldiniz",
     "copyright": "Altunoğulları Orman Ürünleri © 2026",
     "show_ui_builder": False,
+    "show_theme_chooser": True,
 
     # Dashboard linki geri getirildi; yeşil kısa kutu menü yerine sade orijinal üst bar korunur.
     "topmenu_links": [
@@ -242,6 +243,7 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
     "theme": "default",
+    "default_theme_mode": "auto",
     "dark_mode_theme": None,
     "button_classes": {
         "primary": "btn-primary",
