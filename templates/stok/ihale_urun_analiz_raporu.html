@@ -3,11 +3,69 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4">
-        <i class="fas fa-tree text-primary"></i> Ürün Analiz Raporu
-    </h1>
+    <h1 class="mb-4"><i class="fas fa-tree text-primary"></i> Ürün Analiz Raporu</h1>
 
-    <!-- ===== ÖZET KARTLAR ===== -->
+    <!-- FİLTRELER -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white"><i class="fas fa-filter"></i> Filtreler</div>
+        <div class="card-body">
+            <form method="get">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Başlangıç</label>
+                        <input type="date" name="baslangic" value="{{ baslangic }}" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Bitiş</label>
+                        <input type="date" name="bitis" value="{{ bitis }}" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Boy</label>
+                        <select name="boy" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for b in boy_secenekleri %}
+                                <option value="{{ b }}" {% if boy == b %}selected{% endif %}>{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Ürün</label>
+                        <select name="urun" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for u in urun_secenekleri %}
+                                <option value="{{ u }}" {% if urun == u %}selected{% endif %}>{{ u }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Durum</label>
+                        <select name="durum" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for kod, ad in durum_secenekleri %}
+                                <option value="{{ kod }}" {% if durum == kod %}selected{% endif %}>{{ ad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Ödeme Durumu</label>
+                        <select name="odeme_durumu" class="form-select">
+                            <option value="">-- Tümü --</option>
+                            {% for kod, ad in odeme_durumu_secenekleri %}
+                                <option value="{{ kod }}" {% if odeme_durumu == kod %}selected{% endif %}>{{ ad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-search"></i> Filtrele</button>
+                    <a href="{% url 'stok:ihale_urun_analiz_raporu' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Temizle</a>
+                    <a href="?{{ request.GET.urlencode }}&excel=1" class="btn btn-warning ms-auto"><i class="fas fa-file-excel"></i> Excel İndir</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ÜST ÖZET KARTLAR -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-primary text-white">
@@ -45,13 +103,10 @@
         </div>
     </div>
 
-    <!-- ===== ANA TABLO ===== -->
+    <!-- ANA TABLO -->
     <div class="card">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <span><i class="fas fa-table"></i> Ürün Bazlı Analiz</span>
-            <a href="?excel=1" class="btn btn-warning btn-sm">
-                <i class="fas fa-file-excel"></i> Excel İndir
-            </a>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -60,6 +115,7 @@
                         <tr>
                             <th>#</th>
                             <th>Ürün</th>
+                            <th>Boy</th>
                             <th class="text-end">İhale Sayısı</th>
                             <th class="text-end">Toplam (m³)</th>
                             <th class="text-end">Kalan (m³)</th>
@@ -75,6 +131,7 @@
                                     <i class="fas {{ s.icon }}"></i> {{ s.ad }}
                                 </span>
                             </td>
+                            <td><strong>{{ s.boy|default:"-" }}</strong></td>
                             <td class="text-end fw-bold">{{ s.ihale_sayisi }}</td>
                             <td class="text-end fw-bold text-primary">{{ s.toplam_miktar|floatformat:4 }}</td>
                             <td class="text-end fw-bold {% if s.kalan_miktar > 0 %}text-warning{% else %}text-success{% endif %}">
@@ -86,7 +143,7 @@
                     </tbody>
                     <tfoot class="table-primary fw-bold">
                         <tr>
-                            <td colspan="2" class="text-end">TOPLAM:</td>
+                            <td colspan="3" class="text-end">TOPLAM:</td>
                             <td class="text-end">{{ genel_toplam.ihale_sayisi }}</td>
                             <td class="text-end">{{ genel_toplam.toplam_miktar|floatformat:4 }}</td>
                             <td class="text-end">{{ genel_toplam.kalan_miktar|floatformat:4 }}</td>
@@ -98,10 +155,58 @@
         </div>
     </div>
 
-    <!-- ===== GRAFİK ===== -->
+    <!-- ===== ÜRÜN BAZLI ÖZET KARTLARI ===== -->
+    <div class="row mb-4 mt-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i class="fas fa-chart-pie text-primary"></i> Ürün Bazlı Özet
+            </h4>
+        </div>
+        {% for u in urun_ozet %}
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-{{ u.renk }} h-100">
+                <div class="card-header bg-{{ u.renk }} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas {{ u.icon }}"></i> {{ u.ad }}
+                        <span class="badge bg-light text-dark float-end">{{ u.boy_sayisi }} boy</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Toplam Miktar</small>
+                        <h4 class="text-primary mb-0">{{ u.toplam_miktar|floatformat:4 }} m³</h4>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Kalan Miktar</small>
+                        <h4 class="{% if u.toplam_kalan > 0 %}text-warning{% else %}text-success{% endif %} mb-0">
+                            {{ u.toplam_kalan|floatformat:4 }} m³
+                        </h4>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Toplam Tutar</small>
+                        <h5 class="text-dark mb-0">{{ u.toplam_tutar|floatformat:2 }} TL</h5>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between small">
+                        <span><strong>{{ u.toplam_ihale }}</strong> ihale</span>
+                        <span>Ort: <strong>{{ u.ortalama_fiyat|floatformat:2 }}</strong> TL/m³</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Filtrelere uygun ürün bulunamadı.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- GRAFİK -->
     <div class="card mt-4">
         <div class="card-header bg-primary text-white">
-            <i class="fas fa-chart-pie"></i> Ürün Miktar Dağılımı
+            <i class="fas fa-chart-bar"></i> Ürün Miktar Dağılımı
         </div>
         <div class="card-body">
             <canvas id="urunChart" height="80"></canvas>
@@ -109,21 +214,19 @@
     </div>
 </div>
 
-{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('urunChart').getContext('2d');
-    
     const labels = [];
     const data = [];
     const colors = ['#0d6efd', '#0dcaf0', '#ffc107', '#198754'];
-    
-    {% for s in sonuclar %}
-        labels.push('{{ s.ad }}');
-        data.push({{ s.toplam_miktar|floatformat:4 }});
+
+    {% for u in urun_ozet %}
+        labels.push('{{ u.ad }}');
+        data.push({{ u.toplam_miktar|floatformat:4 }});
     {% endfor %}
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -138,9 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -155,5 +256,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %}
 {% endblock %}
