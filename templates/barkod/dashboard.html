@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Barkod Sistemi{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="fas fa-barcode text-primary"></i> Barkod Sistemi</h1>
+
+    <!-- ÖZET KARTLAR -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-boxes"></i> Toplam Sevkiyat</h6>
+                    <h3>{{ toplam_sevkiyat }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-barcode"></i> Toplam Barkod</h6>
+                    <h3>{{ toplam_adet }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6><i class="fas fa-warehouse"></i> Depoda</h6>
+                    <h3>{{ depoda }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6><i class="fas fa-industry"></i> Üretimde</h6>
+                    <h3>{{ uretimde }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIZLI İŞLEMLER -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-bolt"></i> Hızlı İşlemler
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <a href="{% url 'barkod:sevk_listesi' %}" class="btn btn-primary w-100 py-3">
+                        <i class="fas fa-truck fa-2x d-block mb-2"></i>
+                        Teslim Alınacaklar
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'barkod:barkod_oku' %}" class="btn btn-success w-100 py-3">
+                        <i class="fas fa-camera fa-2x d-block mb-2"></i>
+                        Barkod Oku
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'barkod:rapor_stok' %}" class="btn btn-info w-100 py-3">
+                        <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                        Stok Raporu
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="/admin/barkod/" class="btn btn-secondary w-100 py-3">
+                        <i class="fas fa-cog fa-2x d-block mb-2"></i>
+                        Admin Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- SON HAREKETLER -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-history"></i> Son Hareketler
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Barkod</th>
+                                <th>İşlem</th>
+                                <th>Kullanıcı</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in son_hareketler %}
+                            <tr>
+                                <td><code>{{ h.barkod_adet.barkod }}</code></td>
+                                <td><span class="badge bg-info">{{ h.get_islem_tipi_display }}</span></td>
+                                <td>{{ h.islem_yapan.username|default:"-" }}</td>
+                                <td>{{ h.islem_tarihi|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">Kayıt yok</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SON SEVKİYATLAR -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-truck"></i> Son Sevkiyatlar
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>KİK/Parti</th>
+                                <th>Adet</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in son_sevkiyatlar %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'barkod:teslim_al' s.id %}">
+                                        {{ s.ihale_sevk.ihale.kik_no }}-{{ s.ihale_sevk.ihale.parti_no }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-primary">{{ s.toplam_adet }}</span></td>
+                                <td>
+                                    {% if s.durum == 'tamamlandi' %}
+                                        <span class="badge bg-success">Tamamlandı</span>
+                                    {% elif s.durum == 'beklemede' %}
+                                        <span class="badge bg-warning text-dark">Bekliyor</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ s.get_durum_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.olusturma_tarihi|date:"d.m.Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">Kayıt yok</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

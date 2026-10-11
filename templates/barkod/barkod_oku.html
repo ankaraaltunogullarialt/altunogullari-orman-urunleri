@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% block title %}Barkod Oku{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="fas fa-camera text-success"></i> Barkod Oku</h1>
+
+    <div class="row">
+        <!-- SOL: OKUMA ALANI -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-map-marker-alt"></i> Hedef Konum
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="form-label">Depo</label>
+                        <select id="depo_id" class="form-select form-select-lg">
+                            <option value="">-- Depo Seç --</option>
+                            {% for d in depolar %}
+                            <option value="{{ d.id }}">{{ d.ad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Raf</label>
+                        <select id="raf_id" class="form-select form-select-lg">
+                            <option value="">-- Raf Seç --</option>
+                            {% for r in raflar %}
+                            <option value="{{ r.id }}">{{ r.kod }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">İşlem Tipi</label>
+                        <select id="islem_tipi" class="form-select">
+                            <option value="depo_yerlestirme">Depo Yerleştirme</option>
+                            <option value="stok_sayim">Stok Sayım</option>
+                            <option value="transfer">Transfer</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLUETOOTH OKUYUCU -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-barcode"></i> Barkod Okut (Bluetooth/Klavye)
+                </div>
+                <div class="card-body">
+                    <input type="text" id="barkod-input" 
+                           class="form-control form-control-lg text-center" 
+                           style="font-size: 1.5rem; font-family: 'Courier New', monospace;"
+                           placeholder="Barkodu okutun..." 
+                           autofocus autocomplete="off">
+                </div>
+            </div>
+
+            <!-- KAMERA İLE OKUMA -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-camera"></i> Kamera ile Oku
+                </div>
+                <div class="card-body">
+                    <button type="button" id="kamera-btn" class="btn btn-info w-100">
+                        📷 Kamerayı Aç
+                    </button>
+                    <div id="kamera-alani" style="display:none; margin-top: 10px;">
+                        <div id="qr-reader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ: SON OKUTULANLAR -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white d-flex justify-content-between">
+                    <span><i class="fas fa-list"></i> Son Okutulanlar</span>
+                    <span class="badge bg-light text-dark" id="sayac">0</span>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Barkod</th>
+                                <th>Parti/Boy</th>
+                                <th>Konum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="okutulan-liste">
+                            {% for h in son_okutulanlar %}
+                            <tr>
+                                <td><code>{{ h.barkod_adet.barkod }}</code></td>
+                                <td>{{ h.barkod_adet.barkod_sevkiyat.ihale_sevk.ihale.parti_no }} / {{ h.barkod_adet.barkod_sevkiyat.ihale_sevk.ihale.boy|default:"-" }}</td>
+                                <td>{{ h.yeni_depo.ad|default:"-" }} - {{ h.yeni_raf.kod|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SES EFEKTİ -->
+<audio id="beep-ok" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQBvT18AAAA=" type="audio/wav">
+</audio>
+
+<script>
+let sayac = 0;
+const barkodInput = document.getElementById('barkod-input');
+
+// Bluetooth barkod okuyucu — Enter tuşuyla tetiklenir
+barkodInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const barkod = this.value.trim();
+        if (barkod) {
+            barkodKaydet(barkod);
+            this.value = '';
+        }
+    }
+});
+
+// Barkodu kaydet
+async function barkodKaydet(barkod) {
+    const depo_id = document.getElementById('depo_id').value;
+    const raf_id = document.getElementById('raf_id').value;
+    const islem_tipi = document.getElementById('islem_tipi').value;
+    
+    try {
+        const response = await fetch("{% url 'barkod:barkod_oku_kaydet' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                barkod: barkod,
+                depo_id: depo_id || null,
+                raf_id: raf_id || null,
+                islem_tipi: islem_tipi,
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Ses ve titreşim
+            if (navigator.vibrate) navigator.vibrate(100);
+            try { 
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800;
+                gain.gain.value = 0.1;
+                osc.start();
+                setTimeout(() => osc.stop(), 100);
+            } catch(e) {}
+            
+            // Listeye ekle
+            sayac++;
+            document.getElementById('sayac').textContent = sayac;
+            
+            const tbody = document.getElementById('okutulan-liste');
+            const tr = document.createElement('tr');
+            tr.className = 'table-success';
+            tr.innerHTML = `
+                <td><code>${result.barkod}</code></td>
+                <td>${result.parti} / ${result.boy || '-'}</td>
+                <td>${result.depo} - ${result.raf}</td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+        } else {
+            alert('❌ ' + result.mesaj);
+        }
+    } catch (e) {
+        alert('❌ Hata: ' + e.message);
+    }
+}
+
+// Kamera ile okuma
+document.getElementById('kamera-btn').addEventListener('click', function() {
+    const alan = document.getElementById('kamera-alani');
+    alan.style.display = 'block';
+    
+    // html5-qrcode kütüphanesini dinamik yükle
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    script.onload = function() {
+        const scanner = new Html5QrcodeScanner("qr-reader", {
+            fps: 10,
+            qrbox: { width: 250, height: 150 }
+        });
+        scanner.render(function(decodedText) {
+            barkodKaydet(decodedText);
+        });
+    };
+    document.head.appendChild(script);
+});
+</script>
+{% endblock %}

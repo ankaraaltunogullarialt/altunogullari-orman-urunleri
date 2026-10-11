@@ -966,25 +966,6 @@ class Raf(models.Model):
         return f"{self.depo.kod} - {self.kod}"
 
 
-# ==================== BARKOD ====================
-class StokBarkod(models.Model):
-    urun = models.ForeignKey(Urun, on_delete=models.CASCADE, verbose_name="Ürün")
-    depo = models.ForeignKey(Depo, on_delete=models.CASCADE, verbose_name="Depo")
-    raf = models.ForeignKey(Raf, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Raf")
-    barkod = models.CharField(max_length=100, unique=True, verbose_name="Barkod")
-    miktar = models.FloatField(default=0, verbose_name="Miktar (m³)")
-    lot_no = models.CharField(max_length=50, blank=True, verbose_name="Lot No")
-    son_kullanma = models.DateField(null=True, blank=True, verbose_name="Son Kullanma")
-    olusturma_tarihi = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = "Stok Barkodu"
-        verbose_name_plural = "Stok Barkodları"
-    
-    def __str__(self):
-        return f"{self.barkod} - {self.urun.urun_adi} ({self.miktar} m³)"
-
-
 # ==================== MAKİNE ====================
 class Makine(models.Model):
     DURUM_CHOICES = (

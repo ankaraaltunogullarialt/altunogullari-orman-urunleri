@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Stok Raporu{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="fas fa-warehouse text-primary"></i> Barkodlu Stok Raporu</h1>
+
+    <!-- FİLTRE -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2">
+                <div class="col-md-6">
+                    <select name="depo" class="form-select">
+                        <option value="">-- Tüm Depolar --</option>
+                        {% for d in depolar %}
+                        <option value="{{ d.id }}" {% if depo_id == d.id|stringformat:"s" %}selected{% endif %}>
+                            {{ d.ad }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrele
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'barkod:rapor_stok' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-times"></i> Temizle
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ÖZET -->
+    <div class="alert alert-info">
+        <i class="fas fa-boxes"></i> <strong>Toplam Depoda:</strong> {{ toplam_adet }} adet
+    </div>
+
+    <!-- DEPO BAZLI ÖZET -->
+    {% if depo_ozet %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-chart-pie"></i> Depo Bazlı Özet
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Depo</th>
+                        <th class="text-end">Adet</th>
+                        <th class="text-end">Toplam Miktar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in depo_ozet %}
+                    <tr>
+                        <td>{{ o.depo.ad|default:"Tanımsız" }}</td>
+                        <td class="text-end"><span class="badge bg-primary">{{ o.adet }}</span></td>
+                        <td class="text-end">{{ o.miktar|floatformat:4 }} m³</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- DETAY TABLO -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-list"></i> Barkod Detayları ({{ toplam_adet }} adet, ilk 500 gösteriliyor)
+        </div>
+        <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-sm mb-0">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th>Barkod</th>
+                        <th>KİK/Parti</th>
+                        <th>Boy</th>
+                        <th>Depo</th>
+                        <th>Raf</th>
+                        <th class="text-end">Miktar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in adetler %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'barkod:barkod_detay' a.barkod %}">
+                                <code>{{ a.barkod }}</code>
+                            </a>
+                        </td>
+                        <td>{{ a.barkod_sevkiyat.ihale_sevk.ihale.kik_no }}-{{ a.barkod_sevkiyat.ihale_sevk.ihale.parti_no }}</td>
+                        <td>{{ a.barkod_sevkiyat.ihale_sevk.ihale.boy|default:"-" }}</td>
+                        <td>{{ a.depo.ad|default:"-" }}</td>
+                        <td>{{ a.raf.kod|default:"-" }}</td>
+                        <td class="text-end">{{ a.olcum_miktar|floatformat:4|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">
+                        Kayıt bulunamadı.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

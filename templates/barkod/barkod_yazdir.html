@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Kod Yazdır - {{ ihale.kik_no }}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f0f0; }
+        
+        .toolbar {
+            position: sticky; top: 0;
+            background: #2c3e50; color: white;
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .toolbar h3 { margin: 0; font-size: 18px; }
+        .toolbar button {
+            padding: 10px 20px; background: #27ae60; color: white;
+            border: none; border-radius: 5px; font-size: 16px;
+            cursor: pointer; margin-left: 5px;
+        }
+        .toolbar button.close { background: #95a5a6; }
+        
+        /* 80x70 mm etiketler — 2 sütun */
+        .etiket-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 80mm);
+            gap: 5mm;
+            padding: 10mm;
+            justify-content: center;
+        }
+        
+        .etiket {
+            width: 80mm;
+            height: 70mm;
+            padding: 3mm;
+            background: white;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            page-break-inside: avoid;
+        }
+        
+        .etiket-ust {
+            display: flex;
+            gap: 3mm;
+            flex: 1;
+        }
+        
+        .qr-alan {
+            width: 40mm;
+            height: 40mm;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-alan img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .qr-yok {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            font-size: 8px;
+            color: #999;
+            text-align: center;
+        }
+        
+        .barkod-bilgi {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 9px;
+            line-height: 1.3;
+        }
+        
+        .barkod-kod {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1mm;
+            margin-bottom: 1.5mm;
+            word-break: break-all;
+        }
+        
+        .barkod-satir {
+            display: flex;
+            margin-bottom: 0.5mm;
+        }
+        
+        .barkod-satir strong {
+            color: #555;
+            min-width: 15mm;
+            font-weight: 600;
+        }
+        
+        .etiket-alt {
+            border-top: 1px dashed #666;
+            margin-top: 2mm;
+            padding-top: 1.5mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+        }
+        
+        .etiket-alt strong { color: #000; }
+        
+        @media print {
+            .toolbar { display: none; }
+            body { background: white; margin: 0; padding: 0; }
+            .etiket-grid { padding: 0; gap: 0; }
+            .etiket { border: 1px solid #000; margin: 0; }
+            @page { margin: 5mm; size: A4; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <h3>🖨️ {{ adetler|length }} adet QR kod hazır (80x70 mm)</h3>
+    <div>
+        <button onclick="window.print()">🖨️ YAZDIR</button>
+        <button class="close" onclick="window.close()">✕ KAPAT</button>
+    </div>
+</div>
+
+<div class="etiket-grid">
+    {% for adet in adetler %}
+    <div class="etiket">
+        <div class="etiket-ust">
+            <!-- QR KOD -->
+            <div class="qr-alan">
+                {% if adet.qr_kod %}
+                    <img src="{{ adet.qr_kod.url }}" alt="QR">
+                {% else %}
+                    <div class="qr-yok">
+                        QR kod<br>üretilemedi
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- BİLGİLER -->
+            <div class="barkod-bilgi">
+                <div class="barkod-kod">{{ adet.barkod }}</div>
+                
+                <div class="barkod-satir">
+                    <strong>KİK:</strong> {{ ihale.kik_no|default:"-" }}
+                </div>
+                <div class="barkod-satir">
+                    <strong>Parti:</strong> {{ ihale.parti_no|default:"-" }}
+                </div>
+                <div class="barkod-satir">
+                    <strong>İstif:</strong> {{ ihale.istif_no|default:"-" }}
+                </div>
+                <div class="barkod-satir">
+                    <strong>Ürün:</strong> {{ ihale.urun_adi|default:"-"|truncatechars:18 }}
+                </div>
+                <div class="barkod-satir">
+                    <strong>Boy:</strong> {{ ihale.boy|default:"-" }}
+                </div>
+                <div class="barkod-satir">
+                    <strong>Miktar:</strong> {{ adet.olcum_miktar|floatformat:4 }} m³
+                </div>
+                <div class="barkod-satir">
+                    <strong>Tedarikçi:</strong> {{ ihale.tedarikci.unvan|default:"-"|truncatechars:15 }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="etiket-alt">
+            <span>
+                <strong>Depo:</strong> {{ adet.depo.ad|default:"-" }}
+                <strong>Raf:</strong> {{ adet.raf.kod|default:"-" }}
+            </span>
+            <span>{{ adet.barkod_sevkiyat.olusturma_tarihi|date:"d.m.Y" }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

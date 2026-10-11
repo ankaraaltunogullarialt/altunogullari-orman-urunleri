@@ -365,4 +365,12 @@ urlpatterns = [
     path('personel/', include('personel.urls')),
     path('siparis/', include('siparis.urls')),
     path('finans/', include('finans.urls')),
+    path('barkod/', include('barkod.urls')),
 ]
+
+# ===== MEDIA FILES (Development) =====
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

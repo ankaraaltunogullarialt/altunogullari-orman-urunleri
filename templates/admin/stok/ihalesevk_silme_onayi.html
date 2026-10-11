@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Ana Sayfa</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:stok_ihalesevk_changelist' %}">İhale Sevkleri</a>
+    &rsaquo; Silme Onayı
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>⚠️ Sevkiyat Silme Onayı</h1>
+    
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">
+            <i class="fas fa-exclamation-triangle"></i> DİKKAT!
+        </h4>
+        <p>
+            Silmek istediğiniz <strong>{{ toplam_sevkiyat }}</strong> sevkiyat için 
+            <strong>{{ toplam_barkod }}</strong> adet barkod kaydı bulunuyor.
+        </p>
+        <hr>
+        <p class="mb-0">
+            <strong>Bu sevkiyatları silerseniz;</strong>
+        </p>
+        <ul class="mb-0">
+            <li>✅ Sevkiyat kayıtları silinecek</li>
+            <li>🔴 Bağlı <strong>{{ toplam_barkod }}</strong> adet barkod kaydı da <strong>SİLİNECEK</strong></li>
+            <li>🔴 Barkodların tüm hareket geçmişi <strong>YOK OLACAK</strong></li>
+            <li>🔴 İzlenebilirlik bilgileri <strong>KAYBOLACAK</strong></li>
+        </ul>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <strong>Silinecek Sevkiyatlar ve Barkod Sayıları</strong>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>KİK No</th>
+                        <th>Parti No</th>
+                        <th>Tedarikçi</th>
+                        <th class="text-end">Barkod Adedi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bilgi in sevkiyatlar_bilgi %}
+                    <tr>
+                        <td><strong>{{ bilgi.sevk.ihale.kik_no|default:"-" }}</strong></td>
+                        <td>{{ bilgi.sevk.ihale.parti_no|default:"-" }}</td>
+                        <td>{{ bilgi.sevk.ihale.tedarikci.unvan|default:"-"|truncatechars:30 }}</td>
+                        <td class="text-end">
+                            <span class="badge bg-danger">{{ bilgi.adet }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-danger">
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">TOPLAM:</td>
+                        <td class="text-end fw-bold">{{ toplam_barkod }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'admin:stok_ihalesevk_silme_onayla' %}">
+        {% csrf_token %}
+        
+        <div class="form-group mb-3">
+            <label class="form-label fw-bold">
+                <i class="fas fa-pen"></i> Silme Sebebi (Zorunlu)
+            </label>
+            <textarea name="silme_sebebi" class="form-control" rows="2" 
+                      placeholder="Örn: Yanlış giriş yapılmıştı, yeniden gireceğiz"
+                      required></textarea>
+            <small class="text-muted">
+                Bu sebep kayıtlarda saklanacaktır (denetim için).
+            </small>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="form-label fw-bold">
+                <i class="fas fa-check-circle"></i> Onay
+            </label>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="onay" required>
+                <label class="form-check-label" for="onay">
+                    <strong>{{ toplam_barkod }} adet barkodun silineceğini</strong> 
+                    ve bu işlemin <strong>geri alınamayacağını</strong> anlıyorum.
+                </label>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="fas fa-trash"></i> EVET, SİL
+            </button>
+            <a href="{% url 'admin:stok_ihalesevk_changelist' %}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times"></i> VAZGEÇ
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

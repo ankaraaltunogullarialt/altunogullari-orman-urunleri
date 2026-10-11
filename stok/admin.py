@@ -2,6 +2,9 @@
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.db import models
+from django.contrib import admin, messages
+from django.shortcuts import render, redirect
+from django.urls import path
 from django.utils.html import format_html
 from django.contrib.admin import SimpleListFilter
 from django.utils import timezone
@@ -11,7 +14,7 @@ from import_export import fields
 from import_export.admin import ImportExportModelAdmin
 from .models import (
     Urun, Tedarikci, TedarikciTipi, Ihale, IhaleSevk, 
-    StokHareket, Depo, Raf, StokBarkod, Makine,
+    StokHareket, Depo, Raf, Makine,
     UretimAsama, UretimEmri, UretimAsamaTakip,
     UretimRecete, UretimReceteDetay, Uretim, Fire,
     NACEKodu, Tasiyici, TasiyiciArac, TasiyiciOdeme, StokDevir,
@@ -921,7 +924,6 @@ class TasiyiciOdemeInline(admin.TabularInline):
 class IhaleSevkAdmin(ImportExportModelAdmin):
     resource_class = IhaleSevkResource
 
-    # ★★★ BU SATIRI EKLE ★★★
     autocomplete_fields = ['ihale', 'tasiyici', 'tasiyici_arac']
 
     list_display = [
@@ -939,51 +941,185 @@ class IhaleSevkAdmin(ImportExportModelAdmin):
         'fatura_no',
     ]
     readonly_fields = [
-    'kalan_miktar', 'kalan_adet', 'tasima_toplam_tutar',
-    'tasima_odeme_durumu', 'tasima_odenen_tutar',
-]
+        'kalan_miktar', 'kalan_adet', 'tasima_toplam_tutar',
+        'tasima_odeme_durumu', 'tasima_odenen_tutar',
+    ]
     inlines = [TasiyiciOdemeInline]
     
     fieldsets = (
         ('Sevk Bilgileri', {
             'fields': (
-                'ihale',
-                'sevk_tarihi',
-                'sevk_miktar',
-                'sevk_adet',
-                'kalan_miktar',
-                'kalan_adet',
+                'ihale', 'sevk_tarihi', 'sevk_miktar', 'sevk_adet',
+                'kalan_miktar', 'kalan_adet',
             )
         }),
         ('Taşıyıcı Bilgileri', {
             'fields': (
-                'tasiyici',
-                'tasiyici_arac',
-                'irsaliye_no',
-                'nereden',
-                'nereye',
+                'tasiyici', 'tasiyici_arac', 'irsaliye_no',
+                'nereden', 'nereye',
             )
         }),
         ('💰 TAŞIMA ÜCRETİ', {
-            'fields': (
-                'tasima_birim_fiyat',
-                'tasima_toplam_tutar',
-            ),
+            'fields': ('tasima_birim_fiyat', 'tasima_toplam_tutar'),
         }),
         ('💳 FATURA BİLGİLERİ', {
-            'fields': (
-                'fatura_no',
-                'fatura_tarihi',
-            ),
+            'fields': ('fatura_no', 'fatura_tarihi'),
             'classes': ('collapse',)
         }),
         ('✅ TAŞIMA ÖDEME DURUMU (Otomatik)', {
-            'fields': (
-                'tasima_odeme_durumu',
-                'tasima_odenen_tutar',
-            ),
+            'fields': ('tasima_odeme_durumu', 'tasima_odenen_tutar'),
         }),
     )
+    
+    # ===== ÖZEL SİLME AKSİYONU =====
+    actions = ['ozel_sil']
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'silme-onayla/',
+                self.admin_site.admin_view(self.silme_onayla),
+                name='stok_ihalesevk_silme_onayla',
+            ),
+        ]
+        return custom_urls + urls
+    
+    @admin.action(description='🗑️ Seçili sevkiyatları sil (uyarılı)')
+    def ozel_sil(self, request, queryset):
+        """
+        Seçili sevkiyatları sil ama önce barkod bağlantısını kontrol et.
+        Barkod varsa uyarı sayfası göster.
+        """
+        sevkiyatlar_bilgi = []
+        toplam_barkod = 0
+        
+        for sevk in queryset:
+            try:
+                barkod_sevkiyat = sevk.barkod_sevkiyat
+                adet = barkod_sevkiyat.toplam_adet or 0
+                if adet > 0:
+                    toplam_barkod += adet
+                    sevkiyatlar_bilgi.append({
+                        'sevk': sevk,
+                        'barkod_sevkiyat': barkod_sevkiyat,
+                        'adet': adet,
+                    })
+            except AttributeError:
+                # barkod_sevkiyat yok (silinmiş veya oluşturulmamış)
+                continue
+            except Exception:
+                continue
+        
+        # Barkod varsa uyarı sayfası göster
+        if toplam_barkod > 0:
+            request.session['silinecek_sevkler'] = list(queryset.values_list('id', flat=True))
+            
+            context = {
+                **self.admin_site.each_context(request),
+                'title': 'Sevkiyat Silme Onayı',
+                'sevkiyatlar_bilgi': sevkiyatlar_bilgi,
+                'toplam_barkod': toplam_barkod,
+                'toplam_sevkiyat': len(sevkiyatlar_bilgi),
+                'opts': self.model._meta,
+                'queryset': queryset,
+            }
+            return render(request, 'admin/stok/ihalesevk_silme_onayi.html', context)
+        
+        # Barkod yoksa direkt sil
+        silinen = queryset.count()
+        queryset.delete()
+        self.message_user(
+            request,
+            f'✅ {silinen} sevkiyat silindi (barkod kaydı yoktu).',
+            messages.SUCCESS
+        )
+    
+    def silme_onayla(self, request):
+        """Onay sonrası gerçekten sil"""
+        if request.method != 'POST':
+            return redirect('admin:stok_ihalesevk_changelist')
+        
+        sevk_ids = request.session.get('silinecek_sevkler', [])
+        silme_sebebi = request.POST.get('silme_sebebi', '').strip()
+        
+        if not sevk_ids:
+            self.message_user(request, '⚠️ Silinecek sevkiyat bulunamadı.', messages.WARNING)
+            return redirect('admin:stok_ihalesevk_changelist')
+        
+        if not silme_sebebi:
+            self.message_user(request, '❌ Silme sebebi zorunlu!', messages.ERROR)
+            return redirect('admin:stok_ihalesevk_changelist')
+        
+        sevkiyatlar = IhaleSevk.objects.filter(id__in=sevk_ids)
+        toplam_sevk = sevkiyatlar.count()
+        toplam_barkod = 0
+        
+        # ============================================================
+        # ★★★ SİLME ÖNCESİ VERİTABANI LOG'U ★★★
+        # ============================================================
+        import json
+        from barkod.models import (
+            SilinenSevkiyatLog, BarkodSevkiyat, BarkodAdet
+        )
+        
+        for sevk in sevkiyatlar:
+            barkod_sayisi = 0
+            barkod_numaralari = []
+            
+            try:
+                bs = sevk.barkod_sevkiyat
+                barkod_sayisi = bs.toplam_adet or 0
+                toplam_barkod += barkod_sayisi
+                
+                # İlk 50 barkod numarasını al
+                adetler = BarkodAdet.objects.filter(
+                    barkod_sevkiyat=bs
+                ).values_list('barkod', flat=True)[:50]
+                barkod_numaralari = list(adetler)
+            except AttributeError:
+                pass
+            
+            # Log kaydı oluştur
+            SilinenSevkiyatLog.objects.create(
+                sevkiyat_id=sevk.id,
+                kik_no=sevk.ihale.kik_no or '',
+                parti_no=sevk.ihale.parti_no or '',
+                tedarikci=sevk.ihale.tedarikci.unvan if sevk.ihale.tedarikci else '',
+                urun_adi=sevk.ihale.urun_adi or '',
+                boy=sevk.ihale.boy or '',
+                sevk_miktar=sevk.sevk_miktar,
+                sevk_adet=sevk.sevk_adet,
+                barkod_sayisi=barkod_sayisi,
+                silme_sebebi=silme_sebebi,
+                silen_kullanici=request.user,
+                yedek_ozet=json.dumps(barkod_numaralari, ensure_ascii=False) if barkod_numaralari else '',
+            )
+        
+        # ============================================================
+        # ★★★ ŞİMDİ SİL ★★★
+        # ============================================================
+        
+        # Önce BarkodSevkiyat'ları sil (PROTECT'i bypass için)
+        try:
+            BarkodSevkiyat.objects.filter(ihale_sevk__in=sevkiyatlar).delete()
+        except Exception as e:
+            self.message_user(request, f'⚠️ Barkod silme hatası: {e}', messages.WARNING)
+        
+        # Sonra sevkiyatları sil
+        sevkiyatlar.delete()
+        
+        # Session temizle
+        if 'silinecek_sevkler' in request.session:
+            del request.session['silinecek_sevkler']
+        
+        self.message_user(
+            request,
+            f'✅ {toplam_sevk} sevkiyat ve {toplam_barkod} barkod silindi. '
+            f'Sebep: {silme_sebebi} | Log kaydedildi.',
+            messages.SUCCESS
+        )
+        return redirect('admin:stok_ihalesevk_changelist')
     
     def tasima_odeme_durumu_badge(self, obj):
         colors = {
@@ -999,7 +1135,10 @@ class IhaleSevkAdmin(ImportExportModelAdmin):
     tasima_odeme_durumu_badge.short_description = "Taşıma Ödeme"
 
     def delete_queryset(self, request, queryset):
-        """Toplu silmede her bir objeyi tek tek sil (delete() metodu çalışsın)"""
+        """
+        Toplu silmede her bir objeyi tek tek sil.
+        PROTECT varsa hata verir, kullanıcı özel aksiyonu kullanmalı.
+        """
         for obj in queryset:
             obj.delete()
 
@@ -1149,13 +1288,6 @@ class RafAdmin(admin.ModelAdmin):
     list_display = ['depo', 'kod', 'kapasite']
     list_filter = ['depo']
     search_fields = ['kod']
-
-
-@admin.register(StokBarkod)
-class StokBarkodAdmin(admin.ModelAdmin):
-    list_display = ['barkod', 'urun', 'depo', 'raf', 'miktar', 'lot_no']
-    list_filter = ['depo']
-    search_fields = ['barkod', 'urun__urun_adi', 'lot_no']
 
 
 @admin.register(UretimAsama)

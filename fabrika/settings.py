@@ -65,10 +65,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'import_export',
-    'stok',
+    'stok.apps.StokConfig',
     'personel',
     'siparis',
     'finans',
+    'barkod',
 ]
 
 MIDDLEWARE = [

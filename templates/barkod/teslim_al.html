@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}Teslim Al - {{ ihale.kik_no }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- BAŞLIK -->
+    <h1 class="mb-4">
+        <i class="fas fa-truck-loading text-primary"></i> Teslim Al
+    </h1>
+
+    <!-- İHALE BİLGİSİ -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-info-circle"></i> Sevkiyat Bilgisi
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted d-block">KİK No</small>
+                    <h5>{{ ihale.kik_no|default:"-" }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Parti No</small>
+                    <h5>{{ ihale.parti_no|default:"-" }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Tedarikçi</small>
+                    <h5>{{ ihale.tedarikci.unvan|default:"-"|truncatechars:30 }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Boy</small>
+                    <h5>{{ ihale.boy|default:"-" }}</h5>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Beklenen Miktar</small>
+                    <h5>{{ ihale_sevk.sevk_miktar|floatformat:4 }} m³</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Kayıtlı Adet</small>
+                    <h5 class="text-primary">{{ mevcut_adet }} adet</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Ürün</small>
+                    <h5>{{ ihale.urun_adi|default:"-" }}</h5>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">Sevk Tarihi</small>
+                    <h5>{{ ihale_sevk.sevk_tarihi|date:"d.m.Y"|default:"-" }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADET GİRİŞ FORMU -->
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+            <i class="fas fa-plus-circle"></i> Yeni Adet Ekle
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Kaç Adet Geldi?</label>
+                    <div class="input-group input-group-lg">
+                        <button class="btn btn-outline-secondary" type="button" 
+                                onclick="document.getElementById('adet').stepDown()">−</button>
+                        <input type="number" id="adet" class="form-control text-center" 
+                               value="10" min="1" max="1000" style="font-size: 1.5rem;">
+                        <button class="btn btn-outline-secondary" type="button" 
+                                onclick="document.getElementById('adet').stepUp()">+</button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Toplam Miktar (m³)</label>
+                    <input type="number" id="toplam_miktar" step="0.0001" 
+                           class="form-control form-control-lg" placeholder="0.0000">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Kalite Durumu</label>
+                    <select id="kalite_durumu" class="form-select form-select-lg">
+                        <option value="kabul">✅ Kabul Edildi</option>
+                        <option value="kismi">⚠️ Kısmi Kabul</option>
+                        <option value="red">❌ Red Edildi</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">&nbsp;</label>
+                    <button type="button" id="kaydet-btn" 
+                            class="btn btn-success btn-lg w-100" style="height: 48px;">
+                        <i class="fas fa-save"></i> KAYDET
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Ortalama: <strong id="ortalama">0.0000</strong> m³/adet
+                    (<span id="yeni-adet">10</span> yeni barkod oluşturulacak)
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEVCUT ADETLER -->
+    {% if mevcut_adetler %}
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-list"></i> Mevcut Barkodlar ({{ mevcut_adet }})
+        </div>
+        <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-sm mb-0">
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th>Sıra</th>
+                        <th>Barkod</th>
+                        <th class="text-end">Miktar</th>
+                        <th>Kalite</th>
+                        <th>Durum</th>
+                        <th class="text-center">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in mevcut_adetler %}
+                    <tr>
+                        <td>{{ a.sira_no }}</td>
+                        <td><code>{{ a.barkod }}</code></td>
+                        <td class="text-end">{{ a.olcum_miktar|floatformat:4|default:"-" }}</td>
+                        <td>
+                            {% if a.kalite_durumu == 'kabul' %}
+                                <span class="badge bg-success">Kabul</span>
+                            {% elif a.kalite_durumu == 'red' %}
+                                <span class="badge bg-danger">Red</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Kısmi</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ a.get_durum_display }}</span></td>
+                        <td class="text-center">
+                            <a href="{% url 'barkod:barkod_detay' a.barkod %}" 
+                            class="btn btn-sm btn-info" 
+                            title="Detay">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'barkod:barkod_yazdir' barkod_sevkiyat.id %}?baslangic={{ a.sira_no }}&bitis={{ a.sira_no }}" 
+                            class="btn btn-sm btn-primary" 
+                            target="_blank"
+                            title="Bu barkodu yazdır">
+                                <i class="fas fa-print"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const adetInput = document.getElementById('adet');
+const miktarInput = document.getElementById('toplam_miktar');
+
+function guncelle() {
+    const adet = parseInt(adetInput.value) || 0;
+    const miktar = parseFloat(miktarInput.value) || 0;
+    const ortalama = adet > 0 ? (miktar / adet) : 0;
+    
+    document.getElementById('ortalama').textContent = ortalama.toFixed(4);
+    document.getElementById('yeni-adet').textContent = adet;
+}
+
+adetInput.addEventListener('input', guncelle);
+miktarInput.addEventListener('input', guncelle);
+
+document.getElementById('kaydet-btn').addEventListener('click', async function() {
+    const btn = this;
+    const adet = parseInt(adetInput.value) || 0;
+    const miktar = parseFloat(miktarInput.value) || 0;
+    const kalite = document.getElementById('kalite_durumu').value;
+    
+    if (adet <= 0) {
+        alert('Adet 0 olamaz');
+        return;
+    }
+    
+    if (miktar <= 0) {
+        alert('Miktar 0 olamaz');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Kaydediliyor...';
+    
+    try {
+        const response = await fetch("{% url 'barkod:teslim_al_kaydet' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                sevkiyat_id: {{ barkod_sevkiyat.id }},
+                adet: adet,
+                toplam_miktar: miktar,
+                kalite_durumu: kalite,
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            if (navigator.vibrate) navigator.vibrate(200);
+            
+            // Barkod yazdırma sayfasını yeni sekmede aç
+            window.open(result.yazdir_url, '_blank');
+            
+            // Sayfayı yenile
+            location.reload();
+        } else {
+            alert('❌ ' + result.mesaj);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> KAYDET';
+        }
+    } catch (e) {
+        alert('❌ Hata: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> KAYDET';
+    }
+});
+</script>
+<div style="height: 80px;"></div>
+{% endblock %}

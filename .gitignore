@@ -49,9 +49,11 @@ www.altunogullari.com
 logs/
 *.sqlite3
 .sqlite3.
-echo yedek.json >> .gitignore
-echo ormanfabrikam_yedek.bak >> .gitignore
-echo fabrika/settings.py.bak >> .gitignore
-echo dump_utf8.py >> .gitignore
-echo "veritabanı_kontrol.py" >> .gitignore
-echo "sanallaştırma.txt" >> .gitignore
+# Yedek ve hassas dosyalar
+yedek.json
+ormanfabrikam_yedek.bak
+dump_utf8.py
+veritabanı_kontrol.py
+sanallaştırma.txt
+*.bak
+*.bak.py
