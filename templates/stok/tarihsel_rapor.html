@@ -257,9 +257,15 @@
 
     <!-- ===== MEVCUT SNAPSHOTLAR ===== -->
     {% if mevcut_snapshotlar %}
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">
-            <i class="fas fa-list"></i> Son 30 Snapshot
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-list"></i> Son 30 Snapshot</span>
+            <form method="post" action="{% url 'stok:tarihsel_snapshot_sil_tumu' %}" onsubmit="return confirm('TÜM snapshot\'lar silinecek! Emin misiniz?');" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash-alt"></i> Tümünü Sil
+                </button>
+            </form>
         </div>
         <div class="card-body p-0">
             <table class="table table-sm table-striped table-hover mb-0">
@@ -271,6 +277,7 @@
                         <th class="text-end">Stok (m³)</th>
                         <th class="text-end">Barkod</th>
                         <th class="text-center">İşlem</th>
+                        <th class="text-center">Sil</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -285,6 +292,14 @@
                             <a href="?tarih={{ s.tarih|date:'Y-m-d' }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-eye"></i> Görüntüle
                             </a>
+                        </td>
+                        <td class="text-center">
+                            <form method="post" action="{% url 'stok:tarihsel_snapshot_sil' s.id %}" onsubmit="return confirm('{{ s.tarih|date:"d.m.Y" }} tarihli snapshot silinsin mi?');" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

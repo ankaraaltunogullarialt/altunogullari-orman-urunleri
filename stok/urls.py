@@ -33,6 +33,8 @@ urlpatterns = [
     path('yedekleme/temizle/', views.yedek_temizle, name='yedek_temizle'),
     path('yedekleme/dosyadan-yukle/', views.yedek_dosyadan_yukle, name='yedek_dosyadan_yukle'),
     path('rapor/tarihsel/', views.tarihsel_rapor, name='tarihsel_rapor'),
+    path('rapor/tarihsel/sil/<int:snapshot_id>/', views.tarihsel_snapshot_sil, name='tarihsel_snapshot_sil'),
+    path('rapor/tarihsel/sil-tumu/', views.tarihsel_snapshot_sil_tumu, name='tarihsel_snapshot_sil_tumu'),
     
     
     # JSON verileri
