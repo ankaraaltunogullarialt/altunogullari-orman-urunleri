@@ -12,6 +12,7 @@ from datetime import timedelta, datetime
 from import_export import resources
 from import_export import fields
 from import_export.admin import ImportExportModelAdmin
+from .models import GunlukSnapshot
 from .models import (
     Urun, Tedarikci, TedarikciTipi, Ihale, IhaleSevk, 
     StokHareket, Depo, Raf, Makine,
@@ -1425,3 +1426,24 @@ class StokDevirAdmin(admin.ModelAdmin):
     def aciklama_kisa(self, obj):
         return (obj.aciklama[:50] + '...') if obj.aciklama and len(obj.aciklama) > 50 else (obj.aciklama or '-')
     aciklama_kisa.short_description = "Açıklama"
+
+
+@admin.register(GunlukSnapshot)
+class GunlukSnapshotAdmin(admin.ModelAdmin):
+    list_display = [
+        'tarih', 'toplam_ihale', 'toplam_stok_miktari',
+        'toplam_barkod', 'depoda_barkod', 'olusturma_tarihi'
+    ]
+    list_filter = ['tarih']
+    readonly_fields = [
+        'tarih', 'toplam_ihale', 'toplam_ihale_miktari',
+        'toplam_kalan_miktar', 'toplam_ihale_tutari',
+        'toplam_urun', 'toplam_stok_miktari', 'kritik_stok_sayisi',
+        'toplam_sevk', 'toplam_sevk_miktari',
+        'toplam_alacak', 'toplam_borc', 'toplam_banka',
+        'toplam_barkod', 'depoda_barkod',
+        'olusturma_tarihi',
+    ]
+    
+    def has_add_permission(self, request):
+        return False  # Manuel ekleme yok, komutla oluşturulur

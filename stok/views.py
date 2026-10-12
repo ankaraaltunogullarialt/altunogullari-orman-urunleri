@@ -2409,3 +2409,34 @@ def _fiili_stok_excel(sevkler, devir, baslangic, bitis, toplamlar, genel_toplam)
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
+
+def tarihsel_rapor(request):
+    """Belirli bir tarihteki durum raporu"""
+    from .models import GunlukSnapshot
+    from django.utils.dateparse import parse_date
+    from .utils import gunluk_snapshot_olustur
+    
+    secilen_tarih_str = request.GET.get('tarih', '').strip()
+    
+    snapshot = None
+    secilen_tarih = None
+    
+    if secilen_tarih_str:
+        secilen_tarih = parse_date(secilen_tarih_str)
+        if secilen_tarih:
+            # Snapshot var mı?
+            snapshot = GunlukSnapshot.objects.filter(tarih=secilen_tarih).first()
+            
+            # Yoksa, o tarihe kadar hesapla
+            if not snapshot:
+                snapshot = gunluk_snapshot_olustur(secilen_tarih)
+    
+    # Mevcut snapshot'lar
+    mevcut_snapshotlar = GunlukSnapshot.objects.all()[:30]
+    
+    context = {
+        'snapshot': snapshot,
+        'secilen_tarih': secilen_tarih,
+        'mevcut_snapshotlar': mevcut_snapshotlar,
+    }
+    return render(request, 'stok/tarihsel_rapor.html', context)

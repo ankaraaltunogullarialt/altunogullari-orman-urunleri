@@ -1242,3 +1242,78 @@ class StokDevir(models.Model):
         """Örn: 'Ekim 2026'"""
         ay_adi = dict(self.AY_CHOICES).get(self.ay, str(self.ay))
         return f"{ay_adi} {self.yil}"
+
+# ============================================================
+# GÜNLÜK SNAPSHOT (TARİHSEL RAPOR İÇİN)
+# ============================================================
+
+class GunlukSnapshot(models.Model):
+    """Her gün sonunda stok/ihale/finans durumunun fotoğrafı"""
+    
+    tarih = models.DateField(
+        unique=True,
+        verbose_name="Tarih"
+    )
+    
+    # ===== İHALE =====
+    toplam_ihale = models.IntegerField(default=0, verbose_name="Toplam İhale")
+    toplam_ihale_miktari = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Toplam İhale Miktarı"
+    )
+    toplam_kalan_miktar = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Toplam Kalan Miktar"
+    )
+    toplam_ihale_tutari = models.DecimalField(
+        max_digits=15, decimal_places=2, default=0,
+        verbose_name="Toplam İhale Tutarı"
+    )
+    
+    # ===== STOK =====
+    toplam_urun = models.IntegerField(default=0, verbose_name="Toplam Ürün")
+    toplam_stok_miktari = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Toplam Stok Miktarı"
+    )
+    kritik_stok_sayisi = models.IntegerField(default=0, verbose_name="Kritik Stok")
+    
+    # ===== SEVK =====
+    toplam_sevk = models.IntegerField(default=0, verbose_name="Toplam Sevk")
+    toplam_sevk_miktari = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Toplam Sevk Miktarı"
+    )
+    
+    # ===== FİNANS =====
+    toplam_alacak = models.DecimalField(
+        max_digits=15, decimal_places=2, default=0,
+        verbose_name="Toplam Alacak"
+    )
+    toplam_borc = models.DecimalField(
+        max_digits=15, decimal_places=2, default=0,
+        verbose_name="Toplam Borç"
+    )
+    toplam_banka = models.DecimalField(
+        max_digits=15, decimal_places=2, default=0,
+        verbose_name="Toplam Banka"
+    )
+    
+    # ===== BARKOD =====
+    toplam_barkod = models.IntegerField(default=0, verbose_name="Toplam Barkod")
+    depoda_barkod = models.IntegerField(default=0, verbose_name="Depoda Barkod")
+    
+    # ===== META =====
+    olusturma_tarihi = models.DateTimeField(auto_now_add=True)
+    notlar = models.TextField(blank=True, verbose_name="Notlar")
+    
+    class Meta:
+        verbose_name = "Günlük Snapshot"
+        verbose_name_plural = "Günlük Snapshot'lar"
+        ordering = ['-tarih']
+        indexes = [
+            models.Index(fields=['-tarih']),
+        ]
+    
+    def __str__(self):
+        return f"{self.tarih} Snapshot"
