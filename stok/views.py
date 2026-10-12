@@ -2,6 +2,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Sum, Count, Avg
 from django.http import JsonResponse, HttpResponse
+from django.core.management import call_command
 from .models import (
     Urun, StokHareket, Ihale, UretimEmri, UretimAsama, Tedarikci,
     IhaleSevk, Tasiyici, TasiyiciArac, TasiyiciOdeme, StokDevir,
