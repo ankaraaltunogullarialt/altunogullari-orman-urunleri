@@ -2441,3 +2441,31 @@ def tarihsel_rapor(request):
         'mevcut_snapshotlar': mevcut_snapshotlar,
     }
     return render(request, 'stok/tarihsel_rapor.html', context)
+
+def tarihsel_snapshot_sil(request, snapshot_id):
+    """Tek bir snapshot'ı sil"""
+    from .models import GunlukSnapshot
+    from django.shortcuts import get_object_or_404, redirect
+    from django.contrib import messages
+    
+    if request.method == 'POST':
+        snapshot = get_object_or_404(GunlukSnapshot, id=snapshot_id)
+        tarih = snapshot.tarih
+        snapshot.delete()
+        messages.success(request, f"{tarih} tarihli snapshot silindi. Yeniden oluşturmak için aynı tarihi seçip 'Rapor Getir' deyin.")
+    
+    return redirect('stok:tarihsel_rapor')
+
+
+def tarihsel_snapshot_sil_tumu(request):
+    """Tüm snapshot'ları sil"""
+    from .models import GunlukSnapshot
+    from django.shortcuts import redirect
+    from django.contrib import messages
+    
+    if request.method == 'POST':
+        count = GunlukSnapshot.objects.all().count()
+        GunlukSnapshot.objects.all().delete()
+        messages.success(request, f"{count} snapshot silindi.")
+    
+    return redirect('stok:tarihsel_rapor')
