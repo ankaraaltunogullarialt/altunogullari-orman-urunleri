@@ -37,6 +37,52 @@ def gunluk_snapshot_olustur(tarih=None):
         toplam=Sum('toplam_tutar')
     )['toplam'] or Decimal('0')
     
+    # ===== DEVAM EDEN MİKTAR (ihale raporuyla birebir) =====
+    devam_eden_kikler = ihaleler.filter(
+        durum='devam_ediyor'
+    ).exclude(
+        kik_no__isnull=True
+    ).exclude(
+        kik_no=''
+    ).values_list('kik_no', flat=True).distinct()
+    
+    devam_eden_ihaleler = ihaleler.filter(kik_no__in=devam_eden_kikler)
+    devam_eden_miktar = devam_eden_ihaleler.aggregate(
+        toplam=Sum('toplam_ihale_miktari')
+    )['toplam'] or Decimal('0')
+    
+    # KİK'siz devam edenleri de ekle
+    kik_siz_devam = ihaleler.filter(
+        durum='devam_ediyor',
+        kik_no__isnull=True
+    )
+    kik_siz_miktar = kik_siz_devam.aggregate(
+        toplam=Sum('toplam_ihale_miktari')
+    )['toplam'] or Decimal('0')
+    devam_eden_miktar += kik_siz_miktar
+    
+    # ===== TOPLAM GELEN MİKTAR (property üzerinden, Python loop) =====
+    toplam_gelen_miktar = Decimal('0')
+    for ihale in ihaleler:
+        toplam_gelen_miktar += ihale.toplam_gelen_miktar or Decimal('0')
+    
+    # ===== TAMAMEN ÖDENMİŞ =====
+    tamamen_odenmis = ihaleler.filter(odeme_durumu='tamamen_odendi')
+    tamamen_odenmis_kalan = tamamen_odenmis.aggregate(
+        toplam=Sum('kalan_miktar')
+    )['toplam'] or Decimal('0')
+    tamamen_odenmis_toplam = tamamen_odenmis.aggregate(
+        toplam=Sum('toplam_ihale_miktari')
+    )['toplam'] or Decimal('0')
+    tamamen_odenmis_ihale_sayisi = tamamen_odenmis.count()
+    
+    # ===== FARKLI KİK SAYISI =====
+    kik_bazli_farkli_kik = ihaleler.exclude(
+        kik_no__isnull=True
+    ).exclude(
+        kik_no=''
+    ).values_list('kik_no', flat=True).distinct().count()
+    
     # ===== STOK VERİLERİ =====
     urunler = Urun.objects.all()
     toplam_urun = urunler.count()
@@ -82,6 +128,14 @@ def gunluk_snapshot_olustur(tarih=None):
         toplam_ihale_miktari=toplam_ihale_miktari,
         toplam_kalan_miktar=toplam_kalan_miktar,
         toplam_ihale_tutari=toplam_ihale_tutari,
+        # ===== YENİ ALANLAR =====
+        devam_eden_miktar=devam_eden_miktar,
+        toplam_gelen_miktar=toplam_gelen_miktar,
+        tamamen_odenmis_kalan=tamamen_odenmis_kalan,
+        tamamen_odenmis_toplam=tamamen_odenmis_toplam,
+        tamamen_odenmis_ihale_sayisi=tamamen_odenmis_ihale_sayisi,
+        kik_bazli_farkli_kik=kik_bazli_farkli_kik,
+        # ===== MEVCUT ALANLAR =====
         toplam_urun=toplam_urun,
         toplam_stok_miktari=toplam_stok_miktari,
         kritik_stok_sayisi=kritik_stok_sayisi,

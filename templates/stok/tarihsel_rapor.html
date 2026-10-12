@@ -67,7 +67,7 @@
                             <td><strong>Devam Eden Miktar:</strong></td>
                             <td class="text-end">
                                 <span class="badge bg-info fs-6">
-                                    {{ snapshot.devam_eden_miktar|default:snapshot.toplam_kalan_miktar|floatformat:4 }}
+                                    {{ snapshot.devam_eden_miktar|floatformat:4 }}
                                 </span> m³
                             </td>
                         </tr>
@@ -77,7 +77,7 @@
                             <td><strong>Toplam Gelen Miktar:</strong></td>
                             <td class="text-end">
                                 <span class="badge bg-success fs-6">
-                                    {{ snapshot.toplam_sevk_miktari|floatformat:4 }}
+                                    {{ snapshot.toplam_gelen_miktar|floatformat:4 }}
                                 </span> m³
                             </td>
                         </tr>
@@ -98,13 +98,13 @@
                                 <strong>✅ Tamamen Ödenmiş Kalan:</strong>
                                 <br>
                                 <small class="text-muted">
-                                    {{ snapshot.tamamen_odenmis_ihale_sayisi|default:"0" }} ihale —
-                                    {{ snapshot.tamamen_odenmis_toplam|default:"0"|floatformat:4 }} m³ toplam
+                                    {{ snapshot.tamamen_odenmis_ihale_sayisi }} ihale —
+                                    {{ snapshot.tamamen_odenmis_toplam|floatformat:4 }} m³ toplam
                                 </small>
                             </td>
                             <td class="text-end">
                                 <span class="badge bg-success fs-5">
-                                    {{ snapshot.tamamen_odenmis_kalan|default:"0"|floatformat:4 }}
+                                    {{ snapshot.tamamen_odenmis_kalan|floatformat:4 }}
                                 </span> m³
                             </td>
                         </tr>
@@ -115,8 +115,8 @@
                                 <strong>🔵 KİK Bazlı Toplam Miktar:</strong>
                                 <br>
                                 <small class="text-muted">
-                                    {{ snapshot.kik_bazli_farkli_kik|default:"0" }} farklı KİK —
-                                    {{ snapshot.kik_bazli_parti_sayisi|default:snapshot.toplam_ihale }} parti
+                                    {{ snapshot.kik_bazli_farkli_kik }} farklı KİK —
+                                    {{ snapshot.toplam_ihale }} parti
                                 </small>
                             </td>
                             <td class="text-end">

@@ -1270,6 +1270,32 @@ class GunlukSnapshot(models.Model):
         verbose_name="Toplam İhale Tutarı"
     )
     
+    # ===== İHALE — İhale raporuyla uyumlu ek alanlar =====
+    devam_eden_miktar = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Devam Eden Miktar (m³)"
+    )
+    toplam_gelen_miktar = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Toplam Gelen Miktar (m³)"
+    )
+    tamamen_odenmis_kalan = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Tamamen Ödenmiş Kalan (m³)"
+    )
+    tamamen_odenmis_toplam = models.DecimalField(
+        max_digits=15, decimal_places=4, default=0,
+        verbose_name="Tamamen Ödenmiş Toplam (m³)"
+    )
+    tamamen_odenmis_ihale_sayisi = models.IntegerField(
+        default=0,
+        verbose_name="Tamamen Ödenmiş İhale Sayısı"
+    )
+    kik_bazli_farkli_kik = models.IntegerField(
+        default=0,
+        verbose_name="Farklı KİK Sayısı"
+    )
+    
     # ===== STOK =====
     toplam_urun = models.IntegerField(default=0, verbose_name="Toplam Ürün")
     toplam_stok_miktari = models.DecimalField(
@@ -1317,3 +1343,4 @@ class GunlukSnapshot(models.Model):
     
     def __str__(self):
         return f"{self.tarih} Snapshot"
+    
