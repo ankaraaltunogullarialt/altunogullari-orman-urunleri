@@ -8,12 +8,12 @@
     </h1>
 
     <!-- TARİH SEÇİCİ -->
-    <div class="card mb-4">
+    <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <form method="get" class="row g-2 align-items-end">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">
-                        Hangi tarihteki durumu görmek istiyorsunuz?
+                        <i class="fas fa-calendar-alt"></i> Hangi tarihteki durumu görmek istiyorsunuz?
                     </label>
                     <input type="date" name="tarih" 
                            value="{{ secilen_tarih|date:'Y-m-d' }}" 
@@ -35,161 +35,242 @@
     </div>
 
     {% if snapshot %}
-    <!-- SONUÇ -->
-    <div class="alert alert-info">
-        <i class="fas fa-calendar"></i> 
-        <strong>{{ secilen_tarih|date:"d.m.Y" }}</strong> tarihindeki durum
+    <!-- BAŞLIK -->
+    <div class="alert alert-info shadow-sm">
+        <i class="fas fa-calendar-check"></i> 
+        <strong>{{ secilen_tarih|date:"d.m.Y" }}</strong> tarihi itibariyle durum
     </div>
 
-    <!-- İHALE KARTLARI -->
-    <h4 class="mb-3"><i class="fas fa-file-contract"></i> İhale Durumu</h4>
+    <!-- ===== İHALE MİKTAR BİLGİLERİ ===== -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cube"></i> Miktar Bilgileri
+                    </h5>
+                </div>
                 <div class="card-body">
-                    <h6>Toplam İhale</h6>
-                    <h3>{{ snapshot.toplam_ihale }}</h3>
+                    <table class="table table-sm">
+                        <!-- Toplam İhale Miktarı -->
+                        <tr>
+                            <td><strong>Toplam İhale Miktarı:</strong></td>
+                            <td class="text-end">
+                                <span class="badge bg-primary fs-6">
+                                    {{ snapshot.toplam_ihale_miktari|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+                        
+                        <!-- Devam Eden Miktar -->
+                        <tr>
+                            <td><strong>Devam Eden Miktar:</strong></td>
+                            <td class="text-end">
+                                <span class="badge bg-info fs-6">
+                                    {{ snapshot.devam_eden_miktar|default:snapshot.toplam_kalan_miktar|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+                        
+                        <!-- Toplam Gelen Miktar -->
+                        <tr>
+                            <td><strong>Toplam Gelen Miktar:</strong></td>
+                            <td class="text-end">
+                                <span class="badge bg-success fs-6">
+                                    {{ snapshot.toplam_sevk_miktari|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+                        
+                        <!-- Toplam Kalan Miktar -->
+                        <tr>
+                            <td><strong>Toplam Kalan Miktar:</strong></td>
+                            <td class="text-end">
+                                <span class="badge bg-warning fs-6">
+                                    {{ snapshot.toplam_kalan_miktar|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+
+                        <!-- ===== TAMAMEN ÖDENMİŞ KALAN ===== -->
+                        <tr style="background: #d1e7dd; border-top: 2px solid #198754;">
+                            <td>
+                                <strong>✅ Tamamen Ödenmiş Kalan:</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ snapshot.tamamen_odenmis_ihale_sayisi|default:"0" }} ihale —
+                                    {{ snapshot.tamamen_odenmis_toplam|default:"0"|floatformat:4 }} m³ toplam
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-success fs-5">
+                                    {{ snapshot.tamamen_odenmis_kalan|default:"0"|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+
+                        <!-- ===== KİK BAZLI TOPLAM MİKTAR ===== -->
+                        <tr style="background: #e7f1ff; border-top: 2px solid #0d6efd;">
+                            <td>
+                                <strong>🔵 KİK Bazlı Toplam Miktar:</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ snapshot.kik_bazli_farkli_kik|default:"0" }} farklı KİK —
+                                    {{ snapshot.kik_bazli_parti_sayisi|default:snapshot.toplam_ihale }} parti
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-primary fs-5">
+                                    {{ snapshot.toplam_ihale_miktari|floatformat:4 }}
+                                </span> m³
+                            </td>
+                        </tr>
+
+                        <!-- Toplam İhale Tutarı -->
+                        <tr>
+                            <td><strong>Toplam İhale Tutarı:</strong></td>
+                            <td class="text-end">
+                                <span class="badge bg-dark fs-6">
+                                    {{ snapshot.toplam_ihale_tutari|floatformat:2 }}
+                                </span> TL
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6>Toplam Miktar</h6>
-                    <h3>{{ snapshot.toplam_ihale_miktari|floatformat:2 }} m³</h3>
+
+        <!-- SAĞ TARAF: ÖZET İSTATİSTİKLER -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Özet</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <h6>Kalan Miktar</h6>
-                    <h3>{{ snapshot.toplam_kalan_miktar|floatformat:2 }} m³</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6>Toplam Tutar</h6>
-                    <h3>{{ snapshot.toplam_ihale_tutari|floatformat:2 }} TL</h3>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Toplam İhale:</span>
+                        <strong class="badge bg-primary">{{ snapshot.toplam_ihale }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Toplam Sevk:</span>
+                        <strong class="badge bg-success">{{ snapshot.toplam_sevk }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Toplam Ürün:</span>
+                        <strong class="badge bg-info">{{ snapshot.toplam_urun }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Kritik Stok:</span>
+                        <strong class="badge bg-warning text-dark">{{ snapshot.kritik_stok_sayisi }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Toplam Barkod:</span>
+                        <strong class="badge bg-dark">{{ snapshot.toplam_barkod }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Depoda:</span>
+                        <strong class="badge bg-success">{{ snapshot.depoda_barkod }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- STOK & BARKOD -->
-    <h4 class="mb-3"><i class="fas fa-boxes"></i> Stok & Barkod Durumu</h4>
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6>Toplam Ürün</h6>
-                    <h3>{{ snapshot.toplam_urun }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6>Stok Miktarı</h6>
-                    <h3>{{ snapshot.toplam_stok_miktari|floatformat:2 }} m³</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h6>Kritik Stok</h6>
-                    <h3>{{ snapshot.kritik_stok_sayisi }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6>Barkod (Depoda)</h6>
-                    <h3>{{ snapshot.depoda_barkod }} / {{ snapshot.toplam_barkod }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FİNANS -->
-    <h4 class="mb-3"><i class="fas fa-money-bill-wave"></i> Finans Durumu</h4>
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6>Toplam Alacak</h6>
-                    <h3>{{ snapshot.toplam_alacak|floatformat:2 }} TL</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h6>Toplam Borç</h6>
-                    <h3>{{ snapshot.toplam_borc|floatformat:2 }} TL</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6>Banka Toplamı</h6>
-                    <h3>{{ snapshot.toplam_banka|floatformat:2 }} TL</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEVK -->
+    <!-- ===== STOK DURUMU ===== -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card bg-dark text-white">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-boxes"></i> Stok Durumu</h5>
+                </div>
                 <div class="card-body">
-                    <h6>Toplam Sevk</h6>
-                    <h3>{{ snapshot.toplam_sevk }}</h3>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-7"><strong>Toplam Stok Miktarı:</strong></div>
+                        <div class="col-5 text-end">
+                            <span class="badge bg-success fs-6 px-3 py-2">
+                                {{ snapshot.toplam_stok_miktari|floatformat:4 }}
+                            </span>
+                            <small class="text-muted">m³</small>
+                        </div>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-7"><strong>Kritik Stok Sayısı:</strong></div>
+                        <div class="col-5 text-end">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                                {{ snapshot.kritik_stok_sayisi }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
-            <div class="card bg-secondary text-white">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Finans Durumu</h5>
+                </div>
                 <div class="card-body">
-                    <h6>Sevk Miktarı</h6>
-                    <h3>{{ snapshot.toplam_sevk_miktari|floatformat:2 }} m³</h3>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-7"><strong>Toplam Alacak:</strong></div>
+                        <div class="col-5 text-end">
+                            <span class="badge bg-success fs-6 px-3 py-2">
+                                {{ snapshot.toplam_alacak|floatformat:2 }}
+                            </span>
+                            <small class="text-muted">TL</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-7"><strong>Toplam Borç:</strong></div>
+                        <div class="col-5 text-end">
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                {{ snapshot.toplam_borc|floatformat:2 }}
+                            </span>
+                            <small class="text-muted">TL</small>
+                        </div>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-7"><strong>Banka Toplamı:</strong></div>
+                        <div class="col-5 text-end">
+                            <span class="badge bg-primary fs-6 px-3 py-2">
+                                {{ snapshot.toplam_banka|floatformat:2 }}
+                            </span>
+                            <small class="text-muted">TL</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     {% elif secilen_tarih %}
-    <div class="alert alert-warning">
+    <div class="alert alert-warning shadow-sm">
         <i class="fas fa-exclamation-triangle"></i>
         <strong>{{ secilen_tarih|date:"d.m.Y" }}</strong> için veri bulunamadı.
     </div>
     {% else %}
-    <div class="alert alert-info">
+    <div class="alert alert-info shadow-sm">
         <i class="fas fa-info-circle"></i> Yukarıdan bir tarih seçin ve raporu getirin.
     </div>
     {% endif %}
 
-    <!-- MEVCUT SNAPSHOTLAR -->
+    <!-- ===== MEVCUT SNAPSHOTLAR ===== -->
     {% if mevcut_snapshotlar %}
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">
             <i class="fas fa-list"></i> Son 30 Snapshot
         </div>
         <div class="card-body p-0">
-            <table class="table table-sm table-striped mb-0">
-                <thead>
+            <table class="table table-sm table-striped table-hover mb-0">
+                <thead class="table-light">
                     <tr>
                         <th>Tarih</th>
                         <th class="text-end">İhale</th>
+                        <th class="text-end">İhale Miktarı</th>
                         <th class="text-end">Stok (m³)</th>
                         <th class="text-end">Barkod</th>
-                        <th></th>
+                        <th class="text-center">İşlem</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -197,11 +278,12 @@
                     <tr>
                         <td><strong>{{ s.tarih|date:"d.m.Y" }}</strong></td>
                         <td class="text-end">{{ s.toplam_ihale }}</td>
+                        <td class="text-end">{{ s.toplam_ihale_miktari|floatformat:2 }}</td>
                         <td class="text-end">{{ s.toplam_stok_miktari|floatformat:2 }}</td>
                         <td class="text-end">{{ s.depoda_barkod }}</td>
-                        <td>
+                        <td class="text-center">
                             <a href="?tarih={{ s.tarih|date:'Y-m-d' }}" class="btn btn-sm btn-primary">
-                                Görüntüle
+                                <i class="fas fa-eye"></i> Görüntüle
                             </a>
                         </td>
                     </tr>
